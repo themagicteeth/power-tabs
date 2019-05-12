@@ -275,6 +275,11 @@ body {
   margin: 5px auto;
 }
 
+
+.tab-group ~ .tab-group-list {
+ box-shadow: none;
+}
+
 .tab-group-container {
   display: flex;
   align-items: center;
