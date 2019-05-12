@@ -1,18 +1,21 @@
 var _escapedRegex = /[-\/\\^$*+?.()|[\]{}]/g;
 function escapeRegex(e) {
-    return e.replace(_escapedRegex, '\\$&');
+  return e.replace(_escapedRegex, "\\$&");
 }
 
 function score(haystack, regex) {
   var match = regex.exec(haystack);
 
-  if(match == null) {
+  if (match == null) {
     return Number.MAX_VALUE;
   }
 
   match.shift();
 
-  return match.filter(m => m).map(m => m.length).reduce((a, b) => a + b, 0);
+  return match
+    .filter(m => m)
+    .map(m => m.length)
+    .reduce((a, b) => a + b, 0);
 }
 
 function tabScore(tab, regex) {
@@ -23,14 +26,16 @@ function tabScore(tab, regex) {
 }
 
 function fuzzyMatchTabObjects(query, tabs) {
-  let pattern = Array.from(query).map(escapeRegex).join('(.*?)');
-  let regex = new RegExp(pattern, 'i');
+  let pattern = Array.from(query)
+    .map(escapeRegex)
+    .join("(.*?)");
+  let regex = new RegExp(pattern, "i");
 
   let results = [];
 
   for (let tab of tabs) {
     let score = tabScore(tab, regex);
-    if(score !== Number.MAX_VALUE) {
+    if (score !== Number.MAX_VALUE) {
       results.push({ tab: tab, score: score });
     }
   }
@@ -39,37 +44,42 @@ function fuzzyMatchTabObjects(query, tabs) {
 }
 
 function fuzzyfinder(text, collections, key) {
-    let suggestions = [];
-    let regex = new RegExp(Array.prototype.map.call(text, escapeRegex).join('.*?'), 'i');
-    for(let item of collections) {
-        let toSearch = key ? key(item) : item;
-        let match = regex.exec(toSearch);
-        if(match !== null) {
-            suggestions.push({
-                subLength: match[0].length,
-                start: match.index,
-                item: item
-            });
-        }
+  let suggestions = [];
+  let regex = new RegExp(
+    Array.prototype.map.call(text, escapeRegex).join(".*?"),
+    "i"
+  );
+  for (let item of collections) {
+    let toSearch = key ? key(item) : item;
+    let match = regex.exec(toSearch);
+    if (match !== null) {
+      suggestions.push({
+        subLength: match[0].length,
+        start: match.index,
+        item: item
+      });
     }
+  }
 
-    function cmp(a, b) {
-        if(a.subLength - b.subLength === 0) {
-            if(a.start - b.start === 0) {
-                return key ? key(a.item).localeCompare(key(b.item)) : a.item.localeCompare(b.item);
-            }
-            return a.start - b.start;
-        }
-        return a.subLength - b.subLength;
-    };
-
-    suggestions.sort(cmp);
-    let items = [];
-    for(let obj of suggestions) {
-        items.push(obj.item);
+  function cmp(a, b) {
+    if (a.subLength - b.subLength === 0) {
+      if (a.start - b.start === 0) {
+        return key
+          ? key(a.item).localeCompare(key(b.item))
+          : a.item.localeCompare(b.item);
+      }
+      return a.start - b.start;
     }
-    return items;
-    // return suggestions;
+    return a.subLength - b.subLength;
+  }
+
+  suggestions.sort(cmp);
+  let items = [];
+  for (let obj of suggestions) {
+    items.push(obj.item);
+  }
+  return items;
+  // return suggestions;
 }
 
 /* provided by https://github.com/bevacqua/fuzzysearch
@@ -80,15 +90,15 @@ function fuzzyfinder(text, collections, key) {
 function fuzzysearch(needle, haystack) {
   var hlen = haystack.length;
   var nlen = needle.length;
-  if(nlen > hlen) {
+  if (nlen > hlen) {
     return false;
   }
-  if(nlen === hlen) {
+  if (nlen === hlen) {
     return needle === haystack;
   }
   outer: for (var i = 0, j = 0; i < nlen; i++) {
     var nch = needle.charCodeAt(i);
-    while(j < hlen) {
+    while (j < hlen) {
       if (haystack.charCodeAt(j++) === nch) {
         continue outer;
       }

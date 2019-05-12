@@ -27,7 +27,7 @@ class TabEntry {
       tab.classList.add("discarded-tab");
     }
 
-    tab.addEventListener("click", (e) => {
+    tab.addEventListener("click", e => {
       // if we have any modifier keys or other buttons then do nothing
       if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) {
         return;
@@ -38,18 +38,18 @@ class TabEntry {
         return;
       }
 
-      this.changeTab()
+      this.changeTab();
     });
 
     // inhibit autoscroll
-    tab.addEventListener("mousedown", (e) => {
+    tab.addEventListener("mousedown", e => {
       if (e.button == 1) {
         e.preventDefault();
       }
     });
 
     // close tab on middle-click
-    tab.addEventListener("auxclick", (e) => {
+    tab.addEventListener("auxclick", e => {
       if (e.button == 1) {
         this.close();
       }
@@ -62,7 +62,7 @@ class TabEntry {
     let icon = document.createElement("div");
     icon.className = "tab-icon";
     this._iconView = icon;
-    icon.addEventListener("error", (e) => {
+    icon.addEventListener("error", e => {
       icon.style.backgroundImage = 'url("/icons/favicon.svg")';
     });
     this.updateIcon(this.favIconUrl);
@@ -81,7 +81,7 @@ class TabEntry {
 
     let audibleIcon = document.createElement("div");
     audibleIcon.className = "tab-audible-icon";
-    audibleIcon.addEventListener("click", (e) => {
+    audibleIcon.addEventListener("click", e => {
       this.muted ? this.unmute() : this.mute();
     });
 
@@ -128,19 +128,18 @@ class TabEntry {
 
     items.push({
       name: "Reload Tab",
-      onClick: (e) => this.reload()
+      onClick: e => this.reload()
     });
 
     if (this.muted) {
       items.push({
         name: "Unmute Tab",
-        onClick: (e) => this.unmute()
+        onClick: e => this.unmute()
       });
-    }
-    else {
+    } else {
       items.push({
         name: "Mute Tab",
-        onClick: (e) => this.mute()
+        onClick: e => this.mute()
       });
     }
 
@@ -148,19 +147,18 @@ class TabEntry {
     if (this.pinned) {
       items.push({
         name: "Unpin Tab",
-        onClick: (e) => this.unpin()
+        onClick: e => this.unpin()
       });
-    }
-    else {
+    } else {
       items.push({
         name: "Pin Tab",
-        onClick: (e) => this.pin()
+        onClick: e => this.pin()
       });
     }
 
     items.push({
       name: "Duplicate Tab",
-      onClick: (e) => this.duplicate()
+      onClick: e => this.duplicate()
     });
 
     items.push({
@@ -168,19 +166,21 @@ class TabEntry {
       items: [
         {
           name: "New Window",
-          onClick: (e) => this.moveToNewWindow()
+          onClick: e => this.moveToNewWindow()
         },
         {
           name: "separator"
         }
-      ].concat(groupList.groups.map((x) => {
-        let g = x;
-        return {
-          name: g.name,
-          isEnabled: () => this.group.uuid !== g.uuid,
-          onClick: (e) => this.attachToNewGroup(g)
-        };
-      }))
+      ].concat(
+        groupList.groups.map(x => {
+          let g = x;
+          return {
+            name: g.name,
+            isEnabled: () => this.group.uuid !== g.uuid,
+            onClick: e => this.attachToNewGroup(g)
+          };
+        })
+      )
     });
 
     items.push({ name: "separator" });
@@ -188,25 +188,25 @@ class TabEntry {
     items.push({
       name: "Close Tabs Above",
       isEnabled: () => this.tabIndex > 0,
-      onClick: (e) => this.group.closeAbove(this.tabIndex)
+      onClick: e => this.group.closeAbove(this.tabIndex)
     });
 
     items.push({
       name: "Close Tabs Below",
-      isEnabled: () => this.tabIndex !== (this.group.tabs.length - 1),
-      onClick: (e) => this.group.closeBelow(this.tabIndex)
+      isEnabled: () => this.tabIndex !== this.group.tabs.length - 1,
+      onClick: e => this.group.closeBelow(this.tabIndex)
     });
 
     items.push({
       name: "Close Other Tabs",
       isEnabled: () => this.group.tabs.length >= 2,
-      onClick: (e) => this.group.closeExcept(this.tabIndex)
+      onClick: e => this.group.closeExcept(this.tabIndex)
     });
 
     items.push({ name: "separator" });
     items.push({
       name: "Undo Close Tab",
-      onClick: async (e) => {
+      onClick: async e => {
         let last = await browser.sessions.getRecentlyClosed({ maxResults: 1 });
         if (last.length === 0) {
           return;
@@ -224,7 +224,7 @@ class TabEntry {
 
     items.push({
       name: "Close Tab",
-      onClick: (e) => this.close()
+      onClick: e => this.close()
     });
 
     return items;
@@ -322,7 +322,10 @@ class TabEntry {
 
   update(changeInfo) {
     if (changeInfo.hasOwnProperty("status")) {
-      this._iconView.classList.toggle("loading", changeInfo.status === "loading");
+      this._iconView.classList.toggle(
+        "loading",
+        changeInfo.status === "loading"
+      );
     }
 
     if (changeInfo.hasOwnProperty("pinned")) {
@@ -386,5 +389,10 @@ function isElementInViewport(el) {
   let rect = el.getBoundingClientRect();
   let width = window.innerWidth || document.documentElement.clientWidth;
   let height = window.innerHeight || document.documentElement.clientHeight;
-  return rect.top >= 0 && rect.left >= 0 && rect.bottom <= height && rect.right <= width;
+  return (
+    rect.top >= 0 &&
+    rect.left >= 0 &&
+    rect.bottom <= height &&
+    rect.right <= width
+  );
 }

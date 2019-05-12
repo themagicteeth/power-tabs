@@ -1,22 +1,26 @@
-var _disableEvent = (e) => { e.preventDefault(); e.stopPropagation(); };
+var _disableEvent = e => {
+  e.preventDefault();
+  e.stopPropagation();
+};
 
 class Group {
   constructor(args) {
-    if(typeof args === "object") {
+    if (typeof args === "object") {
       this.name = args.name;
       this.uuid = args.uuid;
       this.open = args.open;
       this.active = args.active;
-      this.colour = args.hasOwnProperty('colour') ? args.colour : '#000000';
-      this.background = args.hasOwnProperty('background') ? args.background : '#ededf0';
-    }
-    else {
+      this.colour = args.hasOwnProperty("colour") ? args.colour : "#000000";
+      this.background = args.hasOwnProperty("background")
+        ? args.background
+        : "#ededf0";
+    } else {
       this.name = args;
       this.uuid = uuid4();
       this.open = true;
       this.active = false;
-      this.colour = '#000000';
-      this.background = '#ededf0';
+      this.colour = "#000000";
+      this.background = "#ededf0";
     }
 
     this.parent = null;
@@ -37,39 +41,38 @@ class Group {
     details.addEventListener("toggle", () => {
       let changed = details.open !== this.open;
       this.open = details.open;
-      if(changed) {
+      if (changed) {
         this.parent.saveStorage();
       }
     });
 
-    details.addEventListener("dragenter", (e) => {
+    details.addEventListener("dragenter", e => {
       // e.preventDefault();
-      if(e.target !== this._listView && e.target.classList) {
+      if (e.target !== this._listView && e.target.classList) {
         e.target.classList.add("drop-target");
 
         // can't use dragleave because it's buggy
-        if(this._previousDrop) {
+        if (this._previousDrop) {
           this._previousDrop.classList.remove("drop-target");
         }
         this._previousDrop = e.target;
       }
     });
 
-    details.addEventListener("drop", (e) => {
-      if(this._previousDrop) {
+    details.addEventListener("drop", e => {
+      if (this._previousDrop) {
         this._previousDrop.classList.remove("drop-target");
       }
-    })
+    });
 
-    details.addEventListener("dragleave", (e) => {
+    details.addEventListener("dragleave", e => {
       // e.preventDefault();
-      if(e.target === this.view) {
+      if (e.target === this.view) {
         this.view.classList.remove("drop-target");
       }
     });
 
-    details.addEventListener("click", (e) => this.onClick(e));
-
+    details.addEventListener("click", e => this.onClick(e));
 
     let summary = document.createElement("summary");
     summary.className = "tab-group-container";
@@ -89,14 +92,14 @@ class Group {
     editGroupName.type = "text";
     editGroupName.className = "tab-group-name";
 
-    editGroupName.addEventListener("blur", (e) => {
+    editGroupName.addEventListener("blur", e => {
       e.preventDefault();
       this._saveAndReplaceText(editGroupName.value);
     });
 
-    editGroupName.addEventListener("keyup", (e) => {
+    editGroupName.addEventListener("keyup", e => {
       e.preventDefault();
-      if(e.key == "Enter") {
+      if (e.key == "Enter") {
         this._saveAndReplaceText(editGroupName.value);
         e.stopPropagation();
       }
@@ -111,7 +114,7 @@ class Group {
     let editGroupButton = document.createElement("div");
     editGroupButton.className = "edit-group-button";
     editGroupButton.title = "Edit Group";
-    editGroupButton.addEventListener("click", (e) => {
+    editGroupButton.addEventListener("click", e => {
       e.preventDefault();
       this.showRenameGroup();
     });
@@ -124,9 +127,9 @@ class Group {
     let newTabButton = document.createElement("div");
     newTabButton.className = "group-new-tab-button";
     newTabButton.title = "New Tab";
-    newTabButton.addEventListener("click", (e) => {
+    newTabButton.addEventListener("click", e => {
       e.preventDefault();
-      this.parent.createTab({group: this});
+      this.parent.createTab({ group: this });
     });
 
     newTabWrapper.appendChild(newTabButton);
@@ -145,8 +148,8 @@ class Group {
 
   getRightBefore(tabIndex) {
     let i = 0;
-    for(; i < this.tabs.length; ++i) {
-      if(this.tabs[i].index >= tabIndex) {
+    for (; i < this.tabs.length; ++i) {
+      if (this.tabs[i].index >= tabIndex) {
         break;
       }
     }
@@ -163,19 +166,19 @@ class Group {
   }
 
   styleSelectedDragStart(value) {
-    for(let e of this._selected) {
+    for (let e of this._selected) {
       e.view.classList.toggle("drag-target", value);
     }
   }
 
   popSelected() {
     // transform to a lookup of tab ID for selected tabs
-    let toRetrieve = new Set(this._selected.map((t) => t.id));
+    let toRetrieve = new Set(this._selected.map(t => t.id));
     this.cleanSelected();
 
     let toReturn = [];
-    this.tabs = this.tabs.filter((t) => {
-      if(toRetrieve.has(t.id)) {
+    this.tabs = this.tabs.filter(t => {
+      if (toRetrieve.has(t.id)) {
         toReturn.push(t);
         this._listView.removeChild(t.view);
         return false;
@@ -190,12 +193,12 @@ class Group {
     // this matters for e.g. filtered views using the search bar.
 
     // transform to a lookup of tab ID for selected tabs
-    let toRetrieve = new Set(this._selected.map((t) => t.id));
+    let toRetrieve = new Set(this._selected.map(t => t.id));
 
     // remove all visible selected tabs
     let visibleSelected = [];
-    this._selected = this._selected.filter((t) => {
-      if(t.visible) {
+    this._selected = this._selected.filter(t => {
+      if (t.visible) {
         visibleSelected.push(t);
         t.view.classList.remove("selected-tab");
         return false;
@@ -203,8 +206,8 @@ class Group {
       return true;
     });
 
-    this.tabs = this.tabs.filter((t) => {
-      if(t.visible && toRetrieve.has(t.id)) {
+    this.tabs = this.tabs.filter(t => {
+      if (t.visible && toRetrieve.has(t.id)) {
         this._listView.removeChild(t.view);
         return false;
       }
@@ -221,7 +224,7 @@ class Group {
   removeSelected(tab) {
     tab.view.classList.remove("selected-tab");
     let index = this._selected.indexOf(tab);
-    if(index !== -1) {
+    if (index !== -1) {
       this._selected.splice(index, 1);
     }
   }
@@ -231,7 +234,7 @@ class Group {
   }
 
   clearSelected() {
-    for(let tab of this._selected) {
+    for (let tab of this._selected) {
       tab.view.classList.remove("selected-tab");
     }
     this._selected = [];
@@ -240,8 +243,8 @@ class Group {
   cleanSelected() {
     // same as clear except it keeps the active tab as selected if exists
     this.clearSelected();
-    let entry = this.tabs.find((t) => t.active);
-    if(entry) {
+    let entry = this.tabs.find(t => t.active);
+    if (entry) {
       this.addSelected(entry);
     }
   }
@@ -249,10 +252,10 @@ class Group {
   _selectRange(begin, end) {
     // range is closed [begin, end]
     let trueEnd = Math.min(end + 1, this.tabs.length);
-    let selectedTabs = new Set(this._selected.map((t) => t.id));
-    for(; begin != trueEnd; ++begin) {
+    let selectedTabs = new Set(this._selected.map(t => t.id));
+    for (; begin != trueEnd; ++begin) {
       let tab = this.tabs[begin];
-      if(!selectedTabs.has(tab.id)) {
+      if (!selectedTabs.has(tab.id)) {
         this.addSelected(tab);
         selectedTabs.add(tab.id);
       }
@@ -264,15 +267,17 @@ class Group {
     let firstTab = tabs.shift();
     let windowId = null;
 
-    if(firstTab) {
+    if (firstTab) {
       let windowInfo = await browser.windows.create({ tabId: firstTab.id });
       windowId = windowInfo.id;
-    }
-    else {
+    } else {
       let windowInfo = await browser.windows.create();
       windowId = windowInfo.id;
     }
-    await browser.tabs.move(tabs.map((t) => t.id), { windowId: windowId, index: -1})
+    await browser.tabs.move(tabs.map(t => t.id), {
+      windowId: windowId,
+      index: -1
+    });
   }
 
   moveSelectedToGroup(group) {
@@ -282,95 +287,95 @@ class Group {
   }
 
   closeOutsideOfSelected() {
-    let selectedTabs = new Set(this._selected.filter((t) => t.visible).map((t) => t.id));
-    for(let tab of this.tabs.concat()) {
-      if(!selectedTabs.has(tab.id)) {
+    let selectedTabs = new Set(
+      this._selected.filter(t => t.visible).map(t => t.id)
+    );
+    for (let tab of this.tabs.concat()) {
+      if (!selectedTabs.has(tab.id)) {
         tab.close();
       }
     }
   }
 
   discardOutsideOfSelected() {
-    let selectedTabs = new Set(this._selected.filter((t) => t.visible).map((t) => t.id));
-    let tabIds = this.tabs.filter((t) => !selectedTabs.has(t.id) && !t.discarded).map((t) => t.id);
+    let selectedTabs = new Set(
+      this._selected.filter(t => t.visible).map(t => t.id)
+    );
+    let tabIds = this.tabs
+      .filter(t => !selectedTabs.has(t.id) && !t.discarded)
+      .map(t => t.id);
     browser.tabs.discard(tabIds);
   }
 
   discardAllTabs() {
-    let tabIds = this.tabs.filter((t) => !t.discarded).map((t) => t.id);
+    let tabIds = this.tabs.filter(t => !t.discarded).map(t => t.id);
     browser.tabs.discard(tabIds);
   }
 
   discardSelected() {
-    let tabIds = this._selected.filter((t) => t.visible && !t.discarded).map((t) => t.id);
+    let tabIds = this._selected
+      .filter(t => t.visible && !t.discarded)
+      .map(t => t.id);
     browser.tabs.discard(tabIds);
   }
 
   applyToSelected(func) {
-    this._selected.filter((t) => t.visible).forEach(func);
+    this._selected.filter(t => t.visible).forEach(func);
   }
 
   onClick(e) {
     let tabId = TabEntry.tabIdFromEvent(e);
-    if(!tabId) {
+    if (!tabId) {
       return;
     }
 
-    if(this !== this.parent.activeGroup) {
+    if (this !== this.parent.activeGroup) {
       return;
     }
 
     let ctrlKey = e.ctrlKey || e.metaKey; // for MacOS
 
-    let tabIndex = this.tabs.findIndex((t) => t.id == tabId);
+    let tabIndex = this.tabs.findIndex(t => t.id == tabId);
     let tab = this.tabs[tabIndex];
 
-    if(!tab || tab.aboutToClose) {
+    if (!tab || tab.aboutToClose) {
       return;
     }
 
-    if(ctrlKey && e.shiftKey) {
-      if(!this._selected.length) {
+    if (ctrlKey && e.shiftKey) {
+      if (!this._selected.length) {
         return; // ctrl + shift + click only works if we have something selected
       }
 
       let anchor = this.tabs.indexOf(this._selected[0]);
-      if(tabIndex > anchor) {
+      if (tabIndex > anchor) {
         this._selectRange(anchor, tabIndex);
-      }
-      else {
+      } else {
         this._selectRange(tabIndex, anchor);
       }
-    }
-    else if(ctrlKey) {
-      if(this.isSelected(tab)) {
+    } else if (ctrlKey) {
+      if (this.isSelected(tab)) {
         this.removeSelected(tab);
-      }
-      else {
+      } else {
         this.addSelected(tab);
       }
-    }
-    else if(e.shiftKey) {
+    } else if (e.shiftKey) {
       let anchor = 0;
-      if(this._selected.length == 0) {
-        anchor = Math.max(this.tabs.findIndex((t) => t.active), 0);
-      }
-      else {
+      if (this._selected.length == 0) {
+        anchor = Math.max(this.tabs.findIndex(t => t.active), 0);
+      } else {
         anchor = this.tabs.indexOf(this._selected[0]);
       }
 
       this.clearSelected();
-      if(tabIndex > anchor) {
+      if (tabIndex > anchor) {
         this._selectRange(anchor, tabIndex);
-      }
-      else if(tabIndex < anchor) {
+      } else if (tabIndex < anchor) {
         this._selectRange(tabIndex, anchor);
-      }
-      else {
+      } else {
         this.addSelected(tab);
       }
-    }
-    else {
+    } else {
       this.clearSelected();
       this.addSelected(tab);
     }
@@ -384,34 +389,34 @@ class Group {
 
   addTab(tabEntry, relativeTo) {
     tabEntry.group = this;
-    if(!relativeTo) {
+    if (!relativeTo) {
       this.tabs.push(tabEntry);
       this._listView.appendChild(tabEntry.view);
-    }
-    else {
+    } else {
       // insert right after the relative tab ID
       let relativeIndex = this.tabs.indexOf(relativeTo);
-      if(relativeIndex == -1) {
+      if (relativeIndex == -1) {
         // weird just insert it to the bottom
         this.tabs.push(tabEntry);
         this._listView.appendChild(tabEntry.view);
-      }
-      else {
+      } else {
         this.tabs.splice(relativeIndex + 1, 0, tabEntry);
         this._listView.insertBefore(tabEntry.view, relativeTo.view.nextSibling);
       }
     }
 
-    browser.sessions.getTabValue(tabEntry.id, "group-id").then((groupId) => {
-      if(groupId === this.uuid) {
+    browser.sessions.getTabValue(tabEntry.id, "group-id").then(groupId => {
+      if (groupId === this.uuid) {
         return;
       }
 
-      browser.sessions.setTabValue(tabEntry.id, "group-id", this.uuid).then(() => {
-        if(this.parent) {
-          this.parent.notifyGroupChange([tabEntry], this.uuid);
-        }
-      });
+      browser.sessions
+        .setTabValue(tabEntry.id, "group-id", this.uuid)
+        .then(() => {
+          if (this.parent) {
+            this.parent.notifyGroupChange([tabEntry], this.uuid);
+          }
+        });
     });
   }
 
@@ -422,12 +427,12 @@ class Group {
   }
 
   async appendTabs(tabEntries, relativeTo) {
-    if(!relativeTo) {
-      for(let entry of tabEntries) {
+    if (!relativeTo) {
+      for (let entry of tabEntries) {
         this.loadTab(entry);
         await browser.sessions.setTabValue(entry.id, "group-id", this.uuid);
       }
-      if(this.parent) {
+      if (this.parent) {
         this.parent.notifyGroupChange(tabEntries, this.uuid);
       }
       return;
@@ -439,12 +444,12 @@ class Group {
 
     this.parent.beginBatchMove();
 
-    for(let i = 0; i < tabEntries.length; ++i) {
+    for (let i = 0; i < tabEntries.length; ++i) {
       let entry = tabEntries[i];
       entry.group = this;
       this.tabs.splice(relativeIndex + i + 1, 0, entry);
 
-      if(entry.active) {
+      if (entry.active) {
         this.addSelected(entry);
       }
 
@@ -455,7 +460,9 @@ class Group {
     }
 
     // bulk move and update tabs to sort by our current position
-    await browser.tabs.move(this.tabs.map((t) => t.id), {index: this.tabs[0].index});
+    await browser.tabs.move(this.tabs.map(t => t.id), {
+      index: this.tabs[0].index
+    });
     this.parent.endBatchMove();
     await this.parent.resync();
     this.parent.notifyGroupChange(tabEntries, this.uuid);
@@ -468,15 +475,15 @@ class Group {
 
     // pre-condition, relativeIndex !=== -1
 
-    for(let i = 0; i <= relativeIndex; ++i) {
+    for (let i = 0; i <= relativeIndex; ++i) {
       canonicalOrder.set(this.tabs[i].id, rollingCount++);
     }
 
-    for(var i = 0; i < tabEntries.length; ++i) {
+    for (var i = 0; i < tabEntries.length; ++i) {
       canonicalOrder.set(tabEntries[i].id, rollingCount++);
     }
 
-    for(let i = relativeIndex + 1; i < this.tabs.length; ++i) {
+    for (let i = relativeIndex + 1; i < this.tabs.length; ++i) {
       canonicalOrder.set(this.tabs[i].id, rollingCount++);
     }
 
@@ -497,15 +504,18 @@ class Group {
     // sort it by position first
     let tabs = this.tabs.sort((a, b) => a.index - b.index);
     let i = 0;
-    for(; i < tabs.length; ++i) {
-      if(tabs[i].index >= newPosition) {
+    for (; i < tabs.length; ++i) {
+      if (tabs[i].index >= newPosition) {
         break;
       }
     }
 
     let relativeTab = tabs[i];
     this.tabs.splice(i, 0, tabEntry);
-    this._listView.insertBefore(tabEntry.view, relativeTab ? relativeTab.view : null);
+    this._listView.insertBefore(
+      tabEntry.view,
+      relativeTab ? relativeTab.view : null
+    );
     browser.sessions.setTabValue(tabEntry.id, "group-id", this.uuid);
   }
 
@@ -513,26 +523,29 @@ class Group {
     let tabIndex = null;
     let toMoveIndex = null;
     this.sortByPosition();
-    for(let i = 0; i < this.tabs.length; ++i) {
-      if(tabIndex !== null && toMoveIndex !== null) {
+    for (let i = 0; i < this.tabs.length; ++i) {
+      if (tabIndex !== null && toMoveIndex !== null) {
         break;
       }
 
       let entry = this.tabs[i];
-      if(tabIndex === null && entry.id == tabId) {
+      if (tabIndex === null && entry.id == tabId) {
         tabIndex = i;
       }
 
-      if(toMoveIndex === null && entry.index >= newPosition) {
+      if (toMoveIndex === null && entry.index >= newPosition) {
         toMoveIndex = i;
       }
     }
 
-    if(toMoveIndex === null) {
-      toMoveIndex = newPosition > this.tabs[this.tabs.length - 1].index ? this.tabs.length : 0;
+    if (toMoveIndex === null) {
+      toMoveIndex =
+        newPosition > this.tabs[this.tabs.length - 1].index
+          ? this.tabs.length
+          : 0;
     }
 
-    if(tabIndex === null) {
+    if (tabIndex === null) {
       return; // not sure what happened here
     }
 
@@ -542,11 +555,10 @@ class Group {
     this.tabs.splice(toMoveIndex, 0, this.tabs.splice(tabIndex, 1)[0]);
 
     let relativeNode = null;
-    if(relativeTab) {
-      if(toMoveIndex > tabIndex) {
+    if (relativeTab) {
+      if (toMoveIndex > tabIndex) {
         relativeNode = relativeTab.view.nextSibling;
-      }
-      else {
+      } else {
         relativeNode = relativeTab.view;
       }
     }
@@ -556,22 +568,21 @@ class Group {
   toggleActive(tab, value) {
     this.active = value;
     tab.view.classList.toggle("active-tab", value);
-    if(value) {
+    if (value) {
       this.addSelected(tab);
-    }
-    else {
+    } else {
       this.removeSelected(tab);
     }
   }
 
   tabIndex(tabId) {
-    return this.tabs.findIndex((t) => t.id === tabId);
+    return this.tabs.findIndex(t => t.id === tabId);
   }
 
   closeExcept(index) {
     let copy = this.tabs.concat();
-    for(let i = 0; i < copy.length; ++i) {
-      if(i === index) {
+    for (let i = 0; i < copy.length; ++i) {
+      if (i === index) {
         continue;
       }
       copy[i].close();
@@ -580,25 +591,25 @@ class Group {
 
   closeAbove(index) {
     let copy = this.tabs.concat();
-    for(let i = 0; i < index; ++i) {
+    for (let i = 0; i < index; ++i) {
       copy[i].close();
     }
   }
 
   closeBelow(index) {
     let copy = this.tabs.concat();
-    for(let i = index + 1; i < this.tabs.length; ++i) {
+    for (let i = index + 1; i < this.tabs.length; ++i) {
       copy[i].close();
     }
   }
 
   removeTab(tabEntry) {
     let index = this.tabs.indexOf(tabEntry);
-    if(index > -1) {
+    if (index > -1) {
       this.tabs.splice(index, 1);
     }
 
-    if(this === tabEntry.group) {
+    if (this === tabEntry.group) {
       this._listView.removeChild(tabEntry.view);
       // don't do this, it breaks the event flow due to races
       // tabEntry.group = null;
@@ -607,7 +618,7 @@ class Group {
 
   sortByPosition() {
     this.tabs.sort((a, b) => a.index - b.index);
-    for(let tab of this.tabs) {
+    for (let tab of this.tabs) {
       this._listView.appendChild(tab.view);
     }
   }
@@ -616,22 +627,21 @@ class Group {
     let sorter = (lhs, rhs) => {
       let a = keyFunc(lhs);
       let b = keyFunc(rhs);
-      if(typeof a === "string") {
+      if (typeof a === "string") {
         return a.localeCompare(b);
-      }
-      else {
+      } else {
         return a - b;
       }
-    }
+    };
 
-    let oldPositions = this.tabs.map((t) => t.index);
+    let oldPositions = this.tabs.map(t => t.index);
     this.tabs.sort(sorter);
 
     this.parent.beginBatchMove();
 
     // move the tabs over
     // maybe when we get tab hiding this could be a single function call
-    for(let index = 0; index < this.tabs.length; ++index) {
+    for (let index = 0; index < this.tabs.length; ++index) {
       let tab = this.tabs[index];
       await browser.tabs.move(tab.id, { index: oldPositions[index] });
       tab.index = oldPositions[index];
@@ -645,15 +655,17 @@ class Group {
     await this.parent.resync();
 
     // the DOM repositioning might have put the active tab of this group out of view
-    if(this.parent.activeGroup === this) {
+    if (this.parent.activeGroup === this) {
       this.parent.scrollToActiveTab();
     }
   }
 
   _toggleDetailEvents(disable) {
-    let f = disable ? this.view.addEventListener : this.view.removeEventListener;
+    let f = disable
+      ? this.view.addEventListener
+      : this.view.removeEventListener;
     // disable all event processing on the <detail> tag
-    for(let event of ["click", "keyup"]) {
+    for (let event of ["click", "keyup"]) {
       f(event, _disableEvent);
     }
   }
@@ -666,12 +678,12 @@ class Group {
     this._summaryView.replaceChild(this._summaryNameView, this._editNameView);
   }
 
-  updateName(newName, save=true) {
+  updateName(newName, save = true) {
     // don't update the name if the user input nothing
-    if(newName) {
+    if (newName) {
       this.name = newName;
       this._summaryNameView.innerText = newName;
-      if(save && this.parent) {
+      if (save && this.parent) {
         this.parent.saveStorage();
       }
     }
@@ -690,8 +702,8 @@ class Group {
 
   static groupIdFromEvent(e) {
     let el = e.target;
-    while(el) {
-      if(el.nodeType == 1 && el.hasAttribute("data-group-id")) {
+    while (el) {
+      if (el.nodeType == 1 && el.hasAttribute("data-group-id")) {
         return el.getAttribute("data-group-id");
       }
       el = el.parentNode;
@@ -700,7 +712,6 @@ class Group {
   }
 
   getContextMenuItems(groupList) {
-
     /**
      * Add Tab
      * ---
@@ -718,16 +729,16 @@ class Group {
     let items = [
       {
         name: "Add Tab",
-        onClick: (e) => this.parent.createTab({group: this})
+        onClick: e => this.parent.createTab({ group: this })
       },
       { name: "separator" },
       {
         name: "Reload All Tabs",
-        onClick: () => this.tabs.forEach((t) => t.reload())
+        onClick: () => this.tabs.forEach(t => t.reload())
       },
       {
         name: "Close All Tabs",
-        onClick: () => this.tabs.forEach((t) => t.close())
+        onClick: () => this.tabs.forEach(t => t.close())
       },
       {
         name: "Discard All Tabs",
@@ -739,32 +750,40 @@ class Group {
         items: [
           {
             name: "URL",
-            onClick: (e) => this.sortByKey((t) => t.url)
+            onClick: e => this.sortByKey(t => t.url)
           },
           {
             name: "Title",
-            onClick: (e) => this.sortByKey((t) => t.title)
+            onClick: e => this.sortByKey(t => t.title)
           },
           {
             name: "Access",
-            onClick: (e) => this.sortByKey((t) => t.lastAccessed)
+            onClick: e => this.sortByKey(t => t.lastAccessed)
           },
           {
             name: "Shuffle",
-            onClick: (e) => this.sortByKey((t) => Math.floor(Math.random() * this.tabs.length * 100))
+            onClick: e =>
+              this.sortByKey(t =>
+                Math.floor(Math.random() * this.tabs.length * 100)
+              )
           }
         ]
       },
       { name: "separator" },
       {
         name: "Rename",
-        onClick: (e) => this.showRenameGroup()
+        onClick: e => this.showRenameGroup()
       },
       {
         name: "Delete",
         isEnabled: () => groupList.groupCount > 1,
-        onClick: (e) => {
-          if(this.tabs.length == 0 || window.confirm(`Are you sure? This will close all the tabs that belong to this group.`)) {
+        onClick: e => {
+          if (
+            this.tabs.length == 0 ||
+            window.confirm(
+              `Are you sure? This will close all the tabs that belong to this group.`
+            )
+          ) {
             groupList.removeGroup(this);
           }
         }
@@ -791,23 +810,25 @@ class Group {
         items: [
           {
             name: "New Window",
-            onClick: (e) => this.moveSelectedToNewWindow()
+            onClick: e => this.moveSelectedToNewWindow()
           },
           { name: "separator" }
-        ].concat(groupList.groups.map((x) => {
+        ].concat(
+          groupList.groups.map(x => {
             let group = x;
             return {
               name: group.name,
               isEnabled: () => group.uuid !== this.uuid,
-              onClick: (e) => this.moveSelectedToGroup(group)
+              onClick: e => this.moveSelectedToGroup(group)
             };
-        }))
+          })
+        )
       },
       { name: "separator" },
       {
         name: "Reload Tabs",
         isEnabled: () => false,
-        onClick: (e) => this.applyToSelected((t) => t.reload())
+        onClick: e => this.applyToSelected(t => t.reload())
       },
       {
         name: "Discard Other Tabs",
@@ -816,7 +837,7 @@ class Group {
       },
       {
         name: "Close Other Tabs",
-        onClick: (e) => this.closeOutsideOfSelected()
+        onClick: e => this.closeOutsideOfSelected()
       },
       { name: "separator" },
       {
@@ -826,7 +847,7 @@ class Group {
       },
       {
         name: "Close Tabs",
-        onClick: (e) => this.applyToSelected((t) => t.close())
+        onClick: e => this.applyToSelected(t => t.close())
       }
     ];
     return items;

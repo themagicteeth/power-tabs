@@ -13,10 +13,9 @@ class TabInfo {
   }
 
   exempt(domainName) {
-    if(this._exempt === null) {
+    if (this._exempt === null) {
       this._exempt = new Set([domainName]);
-    }
-    else {
+    } else {
       this._exempt.add(domainName);
     }
   }
@@ -38,8 +37,8 @@ var _discardOnGroupChange = false;
 var _showActiveGroupBadge = true;
 var _hideOnGroupChange = true;
 var _enablePopup = true;
-var _defaultColour = '#000000';
-var _defaultBgColour = '#ededf0';
+var _defaultColour = "#000000";
+var _defaultBgColour = "#ededf0";
 var _freshInstallBaton = null;
 
 // windowId -> groupId for last active group
@@ -51,7 +50,7 @@ async function createContextMenus() {
     contexts: ["tab"]
   });
 
-  for(let g of _groups) {
+  for (let g of _groups) {
     await browser.menus.create({
       id: g.uuid,
       title: g.name,
@@ -62,36 +61,38 @@ async function createContextMenus() {
 }
 
 async function changeAllTabVisbility(hide) {
-  if(!browser.tabs.hasOwnProperty("hide")) {
+  if (!browser.tabs.hasOwnProperty("hide")) {
     return;
   }
 
   let operation = hide ? browser.tabs.hide : browser.tabs.show;
-  let windows = await browser.windows.getAll({windowTypes: ['normal']});
+  let windows = await browser.windows.getAll({ windowTypes: ["normal"] });
 
   let groupIds = new Set();
-  for(let windowInfo of windows) {
-    let activeGroupId = await browser.sessions.getWindowValue(windowInfo.id, "active-group-id");
+  for (let windowInfo of windows) {
+    let activeGroupId = await browser.sessions.getWindowValue(
+      windowInfo.id,
+      "active-group-id"
+    );
     let tabIds = [];
-    for(let [tabId, tabInfo] of _tabInfo.entries()) {
-      if(tabInfo.windowId !== windowInfo.id) {
+    for (let [tabId, tabInfo] of _tabInfo.entries()) {
+      if (tabInfo.windowId !== windowInfo.id) {
         continue;
       }
 
       // if we're showing a tab, then just add it to the array without discrimination.
-      if(!hide) {
+      if (!hide) {
         tabIds.push(tabId);
       }
       // if we're hiding a tab then make sure it's part of the active group ID set
-      else if(tabInfo.groupId !== activeGroupId) {
+      else if (tabInfo.groupId !== activeGroupId) {
         tabIds.push(tabId);
       }
     }
 
     try {
       await operation(tabIds);
-    }
-    catch(e) {
+    } catch (e) {
       console.log(e);
     }
   }
@@ -99,37 +100,45 @@ async function changeAllTabVisbility(hide) {
 
 async function onGroupSwitch(tabId, windowId, beforeGroupId, afterGroupId) {
   // don't do anything if the tab we're switching to is pinned
-  if(tabId !== null) {
+  if (tabId !== null) {
     let tabInfo = await browser.tabs.get(tabId);
-    if(tabInfo.pinned) {
+    if (tabInfo.pinned) {
       return;
     }
   }
 
   _activeGroupCache.set(windowId, beforeGroupId);
-  await browser.sessions.setWindowValue(windowId, "active-group-id", afterGroupId);
-  if(_discardOnGroupChange && browser.tabs.hasOwnProperty("discard")) {
+  await browser.sessions.setWindowValue(
+    windowId,
+    "active-group-id",
+    afterGroupId
+  );
+  if (_discardOnGroupChange && browser.tabs.hasOwnProperty("discard")) {
     let tabIds = [];
-    for(let [key, value] of _tabInfo.entries()) {
-      if(!value.discarded && value.windowId === windowId && value.groupId !== afterGroupId && !value.pinned) {
+    for (let [key, value] of _tabInfo.entries()) {
+      if (
+        !value.discarded &&
+        value.windowId === windowId &&
+        value.groupId !== afterGroupId &&
+        !value.pinned
+      ) {
         tabIds.push(key);
       }
     }
     await browser.tabs.discard(tabIds);
   }
 
-  if(_hideOnGroupChange && browser.tabs.hasOwnProperty("hide")) {
+  if (_hideOnGroupChange && browser.tabs.hasOwnProperty("hide")) {
     let toHide = [];
     let toShow = [];
-    for(let [key, value] of _tabInfo.entries()) {
-      if(value.windowId !== windowId || value.pinned) {
+    for (let [key, value] of _tabInfo.entries()) {
+      if (value.windowId !== windowId || value.pinned) {
         continue;
       }
 
-      if(value.groupId === afterGroupId) {
+      if (value.groupId === afterGroupId) {
         toShow.push(key);
-      }
-      else {
+      } else {
         toHide.push(key);
       }
     }
@@ -139,14 +148,14 @@ async function onGroupSwitch(tabId, windowId, beforeGroupId, afterGroupId) {
 }
 
 function postMessage(msg) {
-  for(let port of _ports.values()) {
+  for (let port of _ports.values()) {
     port.postMessage(msg);
   }
 }
 
 function dispatchGroupSwitch(tabId, windowId, beforeGroupId, afterGroupId) {
-  if(afterGroupId && beforeGroupId !== afterGroupId) {
-    if(_groupSwitchTimeout !== null) {
+  if (afterGroupId && beforeGroupId !== afterGroupId) {
+    if (_groupSwitchTimeout !== null) {
       clearTimeout(_groupSwitchTimeout);
       _groupSwitchTimeout = null;
     }
@@ -159,25 +168,25 @@ function dispatchGroupSwitch(tabId, windowId, beforeGroupId, afterGroupId) {
 }
 
 function encodeURL(url) {
-  return encodeURIComponent(url).replace(/[!'()*]/g, (c) => {
+  return encodeURIComponent(url).replace(/[!'()*]/g, c => {
     const charCode = c.charCodeAt(0).toString(16);
     return `%${charCode}`;
   });
 }
 
 async function setActiveGroupIcon(tabId, groupId) {
-  if(!_showActiveGroupBadge) {
+  if (!_showActiveGroupBadge) {
     return;
   }
 
-  let group = _groups.find((g) => g.uuid == groupId);
-  if(!group) {
+  let group = _groups.find(g => g.uuid == groupId);
+  if (!group) {
     return;
   }
 
   await browser.browserAction.setBadgeBackgroundColor({
     tabId: tabId,
-    color: group.colour + '80' // 50% opacity
+    color: group.colour + "80" // 50% opacity
   });
 
   let text = String.fromCodePoint(group.name.codePointAt(0));
@@ -194,14 +203,16 @@ async function setActiveGroupIcon(tabId, groupId) {
 
 async function toggleActiveGroupIcon(visibility) {
   let entries = Array.from(_tabInfo.entries());
-  for(let group of _groups) {
-    let subentries = entries.filter(([tabId, info]) => info.groupId === group.uuid);
-    for(let [tabId, info] of subentries) {
-      if(visibility) {
+  for (let group of _groups) {
+    let subentries = entries.filter(
+      ([tabId, info]) => info.groupId === group.uuid
+    );
+    for (let [tabId, info] of subentries) {
+      if (visibility) {
         // can only set to `null` to remove in FF59+
         await browser.browserAction.setBadgeBackgroundColor({
           tabId: tabId,
-          color: group.colour + '80'
+          color: group.colour + "80"
         });
       }
 
@@ -219,7 +230,7 @@ async function toggleActiveGroupIcon(visibility) {
 }
 
 async function onBeforeRequest(options) {
-  if(options.frameId !== 0 || options.tabId === -1) {
+  if (options.frameId !== 0 || options.tabId === -1) {
     return {};
   }
 
@@ -233,29 +244,31 @@ async function onBeforeRequest(options) {
 
   let tabInfo = _tabInfo.get(tab.id);
 
-  if(tabInfo && tabInfo.isExempt(domainName)) {
+  if (tabInfo && tabInfo.isExempt(domainName)) {
     return {};
   }
 
   // note: tab.url contains the *previous* URL before we did the request
   // don't do any processing if we don't have any settings for the page
-  if(!settings.hasOwnProperty(key)) {
+  if (!settings.hasOwnProperty(key)) {
     return {};
   }
 
   settings = settings[key];
-  if(settings.neverAsk) {
+  if (settings.neverAsk) {
     return {};
   }
 
   let groupId = await browser.sessions.getTabValue(options.tabId, "group-id");
-  if(!groupId) {
+  if (!groupId) {
     return {};
   }
 
-  if(groupId !== settings.group) {
+  if (groupId !== settings.group) {
     const extURL = browser.extension.getURL("/background/confirm.html");
-    let url = `${extURL}?url=${encodeURL(options.url)}&groupId=${settings.group}&tabId=${tab.id}&windowId=${tab.windowId}`
+    let url = `${extURL}?url=${encodeURL(options.url)}&groupId=${
+      settings.group
+    }&tabId=${tab.id}&windowId=${tab.windowId}`;
     return {
       redirectUrl: url
     };
@@ -268,7 +281,7 @@ async function toggleNeverAsk(domainName, value) {
   let key = `page:${domainName}`;
   let settings = await browser.storage.local.get(key);
 
-  if(!settings.hasOwnProperty(key)) {
+  if (!settings.hasOwnProperty(key)) {
     // ? perplexing so let's ignore
     return;
   }
@@ -277,39 +290,41 @@ async function toggleNeverAsk(domainName, value) {
   await browser.storage.local.set(settings);
 }
 
-async function createTab(windowId, groupId, sendResponse=null) {
-  let oldGroupId = await browser.sessions.getWindowValue(windowId, "active-group-id");
+async function createTab(windowId, groupId, sendResponse = null) {
+  let oldGroupId = await browser.sessions.getWindowValue(
+    windowId,
+    "active-group-id"
+  );
   let dispatch = oldGroupId !== groupId;
-  if(dispatch) {
+  if (dispatch) {
     // have to call this first so onTabCreate knows what to do with this tab
     // regardless of the state of the dispatch switch
     await browser.sessions.setWindowValue(windowId, "active-group-id", groupId);
   }
 
   let port = _ports.get(windowId);
-  if(port) {
+  if (port) {
     try {
       await port.postMessage({
         method: "setGroupBaton",
         groupId: groupId,
         windowId: windowId
       });
-    }
-    catch(e) {}
+    } catch (e) {}
   }
 
   // the onTabCreated event will handle the rest of the state switching here
-  let newTab = await browser.tabs.create({active: true, windowId: windowId});
-  if(sendResponse) {
+  let newTab = await browser.tabs.create({ active: true, windowId: windowId });
+  if (sendResponse) {
     sendResponse(newTab);
   }
 
-  if(dispatch) {
+  if (dispatch) {
     dispatchGroupSwitch(newTab.id, windowId, oldGroupId, groupId);
   }
 }
 
-async function createGroup(windowId, sendResponse=null) {
+async function createGroup(windowId, sendResponse = null) {
   let newGroup = {
     name: "untitled",
     uuid: uuid4(),
@@ -324,10 +339,9 @@ async function createGroup(windowId, sendResponse=null) {
     groups: _groups
   });
 
-  if(sendResponse) {
+  if (sendResponse) {
     sendResponse(newGroup);
-  }
-  else {
+  } else {
     await createTab(windowId, newGroup.uuid);
   }
 }
@@ -341,17 +355,24 @@ async function redirectTab(message) {
 }
 
 async function forceGroupChange(message) {
-  let oldGroupId = await browser.sessions.getWindowValue(message.windowId, "active-group-id");
-  await browser.sessions.setWindowValue(message.windowId, "active-group-id", message.groupId);
+  let oldGroupId = await browser.sessions.getWindowValue(
+    message.windowId,
+    "active-group-id"
+  );
+  await browser.sessions.setWindowValue(
+    message.windowId,
+    "active-group-id",
+    message.groupId
+  );
 
   // since we update the window value above, onTabUpdate down there won't actually dispatch anything
   // we might have to worry about activeSync though.
-  await browser.tabs.update(message.tabId, {active: true});
+  await browser.tabs.update(message.tabId, { active: true });
   dispatchGroupSwitch(null, message.windowId, oldGroupId, message.groupId);
 }
 
 async function switchGroup(windowId, groupId) {
-  if(!groupId) {
+  if (!groupId) {
     return;
   }
 
@@ -359,13 +380,15 @@ async function switchGroup(windowId, groupId) {
     return info.windowId === windowId && info.groupId === groupId;
   });
 
-  if(groupTabs.length === 0) {
+  if (groupTabs.length === 0) {
     // if we don't have any tabs in that group then let's create one
     await createTab(windowId, groupId);
   }
 
   let lastAccessedIndex = groupTabs.reduce((maxIndex, element, index, arr) => {
-    return element[1].lastAccessed > arr[maxIndex][1].lastAccessed ? index : maxIndex;
+    return element[1].lastAccessed > arr[maxIndex][1].lastAccessed
+      ? index
+      : maxIndex;
   }, 0);
 
   let tabId = groupTabs[lastAccessedIndex][0];
@@ -377,17 +400,29 @@ async function switchGroup(windowId, groupId) {
   await forceGroupChange(message);
 }
 
-async function moveTabToGroup(message, redirect=true) {
-  let oldGroupId = await browser.sessions.getTabValue(message.tabId, "group-id");
-  dispatchGroupSwitch(message.tabId, message.windowId, oldGroupId, message.groupId);
-  await browser.sessions.setTabValue(message.tabId, "group-id", message.groupId);
+async function moveTabToGroup(message, redirect = true) {
+  let oldGroupId = await browser.sessions.getTabValue(
+    message.tabId,
+    "group-id"
+  );
+  dispatchGroupSwitch(
+    message.tabId,
+    message.windowId,
+    oldGroupId,
+    message.groupId
+  );
+  await browser.sessions.setTabValue(
+    message.tabId,
+    "group-id",
+    message.groupId
+  );
 
-  if(redirect) {
+  if (redirect) {
     await redirectTab(message);
   }
 
   let groupInfo = _tabInfo.get(message.tabId);
-  if(groupInfo) {
+  if (groupInfo) {
     groupInfo.groupId = message.groupId;
   }
 
@@ -401,45 +436,54 @@ async function moveTabToGroup(message, redirect=true) {
 
 function onPortMessage(message) {
   console.log(message.method);
-  if(message.method == "freshInstall") {
+  if (message.method == "freshInstall") {
     freshInstall();
-  }
-  else if(message.method == "invalidateExempt") {
+  } else if (message.method == "invalidateExempt") {
     _exemptTabs.delete(message.tabId);
-  }
-  else if(message.method == "activeSync") {
+  } else if (message.method == "activeSync") {
     let tabInfo = _tabInfo.get(message.tabId);
-    if(tabInfo) {
+    if (tabInfo) {
       tabInfo.groupId = message.groupId;
     }
 
-    browser.sessions.getWindowValue(message.windowId, "active-group-id").then((groupId) => {
-      dispatchGroupSwitch(message.tabId, message.windowId, groupId, message.groupId);
-    });
+    browser.sessions
+      .getWindowValue(message.windowId, "active-group-id")
+      .then(groupId => {
+        dispatchGroupSwitch(
+          message.tabId,
+          message.windowId,
+          groupId,
+          message.groupId
+        );
+      });
     setActiveGroupIcon(message.tabId, message.groupId);
-  }
-  else if(message.method == "syncTabs") {
-    for(let tabId of message.tabIds) {
+  } else if (message.method == "syncTabs") {
+    for (let tabId of message.tabIds) {
       let obj = _tabInfo.get(tabId);
-      if(obj) {
+      if (obj) {
         obj.groupId = message.groupId;
       }
       setActiveGroupIcon(tabId, message.groupId);
     }
 
-    browser.sessions.getWindowValue(message.windowId, "active-group-id").then((groupId) => {
-      if(message.active) {
-        dispatchGroupSwitch(message.activeTabId, message.windowId, groupId, message.groupId);
-      }
-      else if(_hideOnGroupChange && browser.tabs.hasOwnProperty("hide")) {
-        if(message.groupId === groupId) {
-          browser.tabs.show(message.tabIds);
+    browser.sessions
+      .getWindowValue(message.windowId, "active-group-id")
+      .then(groupId => {
+        if (message.active) {
+          dispatchGroupSwitch(
+            message.activeTabId,
+            message.windowId,
+            groupId,
+            message.groupId
+          );
+        } else if (_hideOnGroupChange && browser.tabs.hasOwnProperty("hide")) {
+          if (message.groupId === groupId) {
+            browser.tabs.show(message.tabIds);
+          } else {
+            browser.tabs.hide(message.tabIds);
+          }
         }
-        else {
-          browser.tabs.hide(message.tabIds);
-        }
-      }
-    });
+      });
   }
 }
 
@@ -450,48 +494,43 @@ function portConnected(port) {
   port.onDisconnect.addListener(() => {
     _ports.delete(windowId);
   });
-  port.postMessage({method: "connected"});
+  port.postMessage({ method: "connected" });
 }
 
 function onMessage(message, sender, sendResponse) {
-  if(message.method == "neverAsk") {
+  if (message.method == "neverAsk") {
     toggleNeverAsk(message.hostname, message.neverAsk);
-  }
-  else if(message.method == "redirectTab") {
-    if(message.exempt) {
+  } else if (message.method == "redirectTab") {
+    if (message.exempt) {
       let domainName = new URL(message.redirectUrl).hostname;
       let tabInfo = _tabInfo.get(message.tabId);
-      if(tabInfo) {
+      if (tabInfo) {
         tabInfo.exempt(domainName);
       }
     }
 
-    if(message.hasOwnProperty("groupId")) {
+    if (message.hasOwnProperty("groupId")) {
       moveTabToGroup(message);
-    }
-    else {
+    } else {
       redirectTab(message);
     }
-  }
-  else if(message.method == "createTab") {
+  } else if (message.method == "createTab") {
     createTab(message.windowId, message.groupId, sendResponse);
     return true;
-  }
-  else if(message.method == "forceGroupChange") {
+  } else if (message.method == "forceGroupChange") {
     forceGroupChange(message);
-  }
-  else if(message.method == "createGroup") {
+  } else if (message.method == "createGroup") {
     createGroup(message.windowId, sendResponse);
     return true;
   }
 }
 
 function onClicked(tab) {
-  if(_openSidebarOnClick) {
+  if (_openSidebarOnClick) {
     browser.sidebarAction.open();
   }
 
-  if(_enablePopup) {
+  if (_enablePopup) {
     browser.browserAction.setPopup({
       popup: "/popup/main.html"
     });
@@ -504,7 +543,7 @@ function onClicked(tab) {
 
 async function ensureDefaultSettings() {
   let groups = await browser.storage.local.get("groups");
-  if(groups.hasOwnProperty("groups")) {
+  if (groups.hasOwnProperty("groups")) {
     _groups = groups.groups;
   }
 
@@ -516,21 +555,21 @@ async function ensureDefaultSettings() {
     showActiveGroupBadge: true,
     enablePopup: true,
     darkTheme: false,
-    defaultColour: '#000000',
-    defaultBgColour: '#ededf0'
+    defaultColour: "#000000",
+    defaultBgColour: "#ededf0"
   };
 
   let keys = Object.keys(settings);
   let before = await browser.storage.local.get(keys);
 
   // fresh install, can just add the default settings right away
-  if(Object.keys(before).length === 0) {
+  if (Object.keys(before).length === 0) {
     await browser.storage.local.set(settings);
     return;
   }
 
-  for(let key of keys) {
-    if(before.hasOwnProperty(key)) {
+  for (let key of keys) {
+    if (before.hasOwnProperty(key)) {
       // already set explicitly so ignore it
       continue;
     }
@@ -561,13 +600,27 @@ async function actualFreshInstall() {
   let tabs = await browser.tabs.query({});
   let activeTabs = [];
 
-  for(let tab of tabs) {
-    if(tab.active) {
-      await browser.sessions.setWindowValue(tab.windowId, "active-group-id", newGroup.uuid);
+  for (let tab of tabs) {
+    if (tab.active) {
+      await browser.sessions.setWindowValue(
+        tab.windowId,
+        "active-group-id",
+        newGroup.uuid
+      );
       activeTabs.push(tab);
     }
     let hidden = tab.hasOwnProperty("hidden") ? tab.hidden : false;
-    _tabInfo.set(tab.id, new TabInfo(tab.lastAccessed, newGroup.uuid, tab.windowId, tab.discarded, hidden, tab.pinned));
+    _tabInfo.set(
+      tab.id,
+      new TabInfo(
+        tab.lastAccessed,
+        newGroup.uuid,
+        tab.windowId,
+        tab.discarded,
+        hidden,
+        tab.pinned
+      )
+    );
     await browser.sessions.setTabValue(tab.id, "group-id", newGroup.uuid);
   }
 
@@ -585,7 +638,7 @@ async function actualFreshInstall() {
 }
 
 function freshInstall() {
-  if(_freshInstallBaton === null) {
+  if (_freshInstallBaton === null) {
     _freshInstallBaton = false;
     actualFreshInstall();
   }
@@ -593,23 +646,43 @@ function freshInstall() {
 
 async function prepare() {
   let tabs = await browser.tabs.query({});
-  for(let tab of tabs) {
+  for (let tab of tabs) {
     let groupId = await browser.sessions.getTabValue(tab.id, "group-id");
-    if(groupId) {
-      if(tab.active) {
-        await browser.sessions.setWindowValue(tab.windowId, "active-group-id", groupId);
+    if (groupId) {
+      if (tab.active) {
+        await browser.sessions.setWindowValue(
+          tab.windowId,
+          "active-group-id",
+          groupId
+        );
         await setActiveGroupIcon(tab.id, groupId);
       }
       let hidden = tab.hasOwnProperty("hidden") ? tab.hidden : false;
-      _tabInfo.set(tab.id, new TabInfo(tab.lastAccessed, groupId, tab.windowId, tab.discarded, hidden, tab.pinned));
+      _tabInfo.set(
+        tab.id,
+        new TabInfo(
+          tab.lastAccessed,
+          groupId,
+          tab.windowId,
+          tab.discarded,
+          hidden,
+          tab.pinned
+        )
+      );
     }
   }
 }
 
 async function onTabCreated(tabInfo) {
-  let groupId = await browser.sessions.getWindowValue(tabInfo.windowId, "active-group-id");
+  let groupId = await browser.sessions.getWindowValue(
+    tabInfo.windowId,
+    "active-group-id"
+  );
   await browser.sessions.setTabValue(tabInfo.id, "group-id", groupId);
-  _tabInfo.set(tabInfo.id, new TabInfo(tabInfo.lastAccessed, groupId, tabInfo.windowId));
+  _tabInfo.set(
+    tabInfo.id,
+    new TabInfo(tabInfo.lastAccessed, groupId, tabInfo.windowId)
+  );
   await setActiveGroupIcon(tabInfo.id, groupId);
   postMessage({
     method: "onTabCreated",
@@ -619,23 +692,43 @@ async function onTabCreated(tabInfo) {
 
 function _upsertTab(tabId, groupId, windowId) {
   let tabInfo = _tabInfo.get(tabId);
-  if(tabInfo) {
+  if (tabInfo) {
     tabInfo.lastAccessed = new Date().getTime();
     tabInfo.groupId = groupId;
     tabInfo.windowId = windowId;
-  }
-  else {
-    browser.tabs.get(tabId).then((tabInfo) => {
-      _tabInfo.set(tabId, new TabInfo(new Date().getTime(), groupId, windowId, tabInfo.discarded, false, tabInfo.pinned));
+  } else {
+    browser.tabs.get(tabId).then(tabInfo => {
+      _tabInfo.set(
+        tabId,
+        new TabInfo(
+          new Date().getTime(),
+          groupId,
+          windowId,
+          tabInfo.discarded,
+          false,
+          tabInfo.pinned
+        )
+      );
     });
   }
 }
 
 async function onTabActive(activeInfo) {
-  let groupId = await browser.sessions.getTabValue(activeInfo.tabId, "group-id");
-  let activeGroupId = await browser.sessions.getWindowValue(activeInfo.windowId, "active-group-id");
-  if(groupId !== activeGroupId) {
-    dispatchGroupSwitch(activeInfo.tabId, activeInfo.windowId, activeGroupId, groupId);
+  let groupId = await browser.sessions.getTabValue(
+    activeInfo.tabId,
+    "group-id"
+  );
+  let activeGroupId = await browser.sessions.getWindowValue(
+    activeInfo.windowId,
+    "active-group-id"
+  );
+  if (groupId !== activeGroupId) {
+    dispatchGroupSwitch(
+      activeInfo.tabId,
+      activeInfo.windowId,
+      activeGroupId,
+      groupId
+    );
   }
 
   await setActiveGroupIcon(activeInfo.tabId, groupId);
@@ -647,7 +740,10 @@ function onTabRemoved(tabId, removeInfo) {
 }
 
 async function onTabAttach(tabId, attachInfo) {
-  let activeGroupId = await browser.sessions.getWindowValue(attachInfo.newWindowId, "active-group-id");
+  let activeGroupId = await browser.sessions.getWindowValue(
+    attachInfo.newWindowId,
+    "active-group-id"
+  );
   await browser.sessions.setTabValue(tabId, "group-id", activeGroupId);
   _upsertTab(tabId, groupId, attachInfo.newWindowId);
   await setActiveGroupIcon(tabId, activeGroupId);
@@ -655,24 +751,24 @@ async function onTabAttach(tabId, attachInfo) {
 
 function onTabUpdate(tabId, changeInfo, tabInfo) {
   let groupInfo = _tabInfo.get(tabId);
-  if(!groupInfo) {
+  if (!groupInfo) {
     return;
   }
 
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1430620
-  if(tabInfo.active) {
+  if (tabInfo.active) {
     setActiveGroupIcon(tabId, groupInfo.groupId);
   }
 
-  if(changeInfo.hasOwnProperty("discarded")) {
+  if (changeInfo.hasOwnProperty("discarded")) {
     groupInfo.discarded = changeInfo.discarded;
   }
 
-  if(changeInfo.hasOwnProperty("pinned")) {
+  if (changeInfo.hasOwnProperty("pinned")) {
     groupInfo.pinned = changeInfo.pinned;
   }
 
-  if(changeInfo.hasOwnProperty("hidden")) {
+  if (changeInfo.hasOwnProperty("hidden")) {
     groupInfo.hidden = changeInfo.hidden;
   }
 }
@@ -682,42 +778,42 @@ function onWindowRemoved(windowId) {
 }
 
 function onSettingChange(changes, area) {
-  if(changes.hasOwnProperty("openSidebarOnClick")) {
+  if (changes.hasOwnProperty("openSidebarOnClick")) {
     _openSidebarOnClick = changes.openSidebarOnClick.newValue;
   }
 
-  if(changes.hasOwnProperty("discardOnGroupChange")) {
+  if (changes.hasOwnProperty("discardOnGroupChange")) {
     _discardOnGroupChange = changes.discardOnGroupChange.newValue;
   }
 
-  if(changes.hasOwnProperty("hideOnGroupChange")) {
+  if (changes.hasOwnProperty("hideOnGroupChange")) {
     _hideOnGroupChange = changes.hideOnGroupChange.newValue;
     changeAllTabVisbility(_hideOnGroupChange);
   }
 
-  if(changes.hasOwnProperty("showActiveGroupBadge")) {
+  if (changes.hasOwnProperty("showActiveGroupBadge")) {
     _showActiveGroupBadge = changes.showActiveGroupBadge.newValue;
     toggleActiveGroupIcon(_showActiveGroupBadge);
   }
 
-  if(changes.hasOwnProperty("enablePopup")) {
+  if (changes.hasOwnProperty("enablePopup")) {
     _enablePopup = changes.enablePopup.newValue;
   }
 
-  if(changes.hasOwnProperty("defaultColour")) {
+  if (changes.hasOwnProperty("defaultColour")) {
     _defaultColour = changes.defaultColour.newValue;
   }
 
-  if(changes.hasOwnProperty("defaultBgColour")) {
+  if (changes.hasOwnProperty("defaultBgColour")) {
     _defaultBgColour = changes.defaultBgColour.newValue;
   }
 
-  if(changes.hasOwnProperty("groups")) {
+  if (changes.hasOwnProperty("groups")) {
     _groups = changes.groups.newValue;
-    browser.tabs.query({active: true}).then((tabs) => {
-      tabs.forEach((t) => {
+    browser.tabs.query({ active: true }).then(tabs => {
+      tabs.forEach(t => {
         let groupInfo = _tabInfo.get(t.id);
-        if(groupInfo) {
+        if (groupInfo) {
           setActiveGroupIcon(t.id, groupInfo.groupId);
         }
       });
@@ -730,40 +826,50 @@ function onSettingChange(changes, area) {
 
 async function onMenuClicked(info, tab) {
   let oldGroupId = await browser.sessions.getTabValue(tab.id, "group-id");
-  if(oldGroupId === info.menuItemId) {
+  if (oldGroupId === info.menuItemId) {
     return;
   }
 
-  await moveTabToGroup({
-    tabId: tab.id,
-    groupId: info.menuItemId,
-    windowId: tab.windowId
-  }, false);
+  await moveTabToGroup(
+    {
+      tabId: tab.id,
+      groupId: info.menuItemId,
+      windowId: tab.windowId
+    },
+    false
+  );
 }
 
 async function onCommand(command) {
-  let windowInfo = await browser.windows.getLastFocused({populate: false, windowTypes: ["normal"]});
-  if(command == "new-group") {
+  let windowInfo = await browser.windows.getLastFocused({
+    populate: false,
+    windowTypes: ["normal"]
+  });
+  if (command == "new-group") {
     await createGroup(windowInfo.id);
-  }
-  else if(command == "switch-active") {
+  } else if (command == "switch-active") {
     let newGroupId = _activeGroupCache.get(windowInfo.id);
     await switchGroup(windowInfo.id, newGroupId);
-  }
-  else if(command == "switch-prev" || command == "switch-next") {
-    let currentGroupId = await browser.sessions.getWindowValue(windowInfo.id, "active-group-id");
-    let index = _groups.findIndex((g) => g.uuid === currentGroupId);
-    if(index !== -1) {
+  } else if (command == "switch-prev" || command == "switch-next") {
+    let currentGroupId = await browser.sessions.getWindowValue(
+      windowInfo.id,
+      "active-group-id"
+    );
+    let index = _groups.findIndex(g => g.uuid === currentGroupId);
+    if (index !== -1) {
       let newIndex = index + (command == "switch-prev" ? -1 : +1);
-      let groupId = newIndex >= _groups.length || newIndex < 0 ? null : _groups[newIndex].uuid;
+      let groupId =
+        newIndex >= _groups.length || newIndex < 0
+          ? null
+          : _groups[newIndex].uuid;
       await switchGroup(windowInfo.id, groupId);
     }
-  }
-  else {
+  } else {
     // the rest are switch-<number>
     // so just strip off the switch- and parse the number
     let index = parseInt(command.slice(7), 10) - 1;
-    let groupId = index >= _groups.length || index < 0 ? null : _groups[index].uuid;
+    let groupId =
+      index >= _groups.length || index < 0 ? null : _groups[index].uuid;
     await switchGroup(windowInfo.id, groupId);
   }
 }
@@ -781,5 +887,9 @@ browser.menus.onClicked.addListener(onMenuClicked);
 browser.windows.onRemoved.addListener(onWindowRemoved);
 browser.browserAction.onClicked.addListener(onClicked);
 browser.storage.onChanged.addListener(onSettingChange);
-browser.webRequest.onBeforeRequest.addListener(onBeforeRequest, {urls: ["<all_urls>"], types: ["main_frame"]}, ["blocking"])
+browser.webRequest.onBeforeRequest.addListener(
+  onBeforeRequest,
+  { urls: ["<all_urls>"], types: ["main_frame"] },
+  ["blocking"]
+);
 browser.commands.onCommand.addListener(onCommand);

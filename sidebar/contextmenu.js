@@ -27,22 +27,21 @@ class ContextMenu {
   }
 
   _updateViewFromItems(el, items) {
-    for(let item of items) {
+    for (let item of items) {
       let div = document.createElement("div");
       div.title = "";
-      if(item.name === "separator") {
+      if (item.name === "separator") {
         div.className = "context-menu-separator";
         el.appendChild(div);
         continue;
       }
 
       div.className = "context-menu-item";
-      if(item.hasOwnProperty("isEnabled") && !item.isEnabled()) {
+      if (item.hasOwnProperty("isEnabled") && !item.isEnabled()) {
         div.classList.add("disabled");
-      }
-      else if(item.hasOwnProperty("items")) {
+      } else if (item.hasOwnProperty("items")) {
         div.classList.add("sub-context-menu-item");
-        div.addEventListener("click", (e) => {
+        div.addEventListener("click", e => {
           e.preventDefault();
           this.showSubMenu(item);
           e.stopPropagation();
@@ -57,9 +56,8 @@ class ContextMenu {
         div.appendChild(icon);
         el.appendChild(div);
         continue;
-      }
-      else {
-        div.addEventListener("mouseup", (e) => {
+      } else {
+        div.addEventListener("mouseup", e => {
           e.preventDefault();
           item.onClick(e);
         });
@@ -76,7 +74,7 @@ class ContextMenu {
   }
 
   show() {
-    if(!this._displayed) {
+    if (!this._displayed) {
       document.body.appendChild(this.view);
       this._positionMenu(this.view);
       this._displayed = true;
@@ -85,7 +83,7 @@ class ContextMenu {
 
   hide() {
     this.hideSubMenu();
-    if(this._displayed) {
+    if (this._displayed) {
       document.body.removeChild(this.view);
       this._displayed = false;
     }
@@ -103,7 +101,7 @@ class ContextMenu {
     let header = document.createElement("div");
     header.classList.add("context-menu-item");
     header.classList.add("sub-context-menu-header");
-    header.addEventListener("click", (e) => {
+    header.addEventListener("click", e => {
       e.preventDefault();
       this.hideSubMenu();
       this.view.classList.remove("hidden");
@@ -128,7 +126,7 @@ class ContextMenu {
   }
 
   hideSubMenu() {
-    if(this._subMenu) {
+    if (this._subMenu) {
       document.body.removeChild(this._subMenu);
       this._subMenu = null;
     }
@@ -138,15 +136,19 @@ class ContextMenu {
     const menuWidth = el.offsetWidth + 4;
     const menuHeight = el.offsetHeight + 4;
 
-    const top = this.clientY + menuHeight > window.innerHeight ?
-                window.innerHeight - menuHeight : this.clientY;
+    const top =
+      this.clientY + menuHeight > window.innerHeight
+        ? window.innerHeight - menuHeight
+        : this.clientY;
 
-    const left = this.clientX + menuWidth > window.innerWidth ?
-                 window.innerWidth - menuWidth : this.clientX;
+    const left =
+      this.clientX + menuWidth > window.innerWidth
+        ? window.innerWidth - menuWidth
+        : this.clientX;
 
     el.style.top = `${top}px`;
     el.style.left = `${left}px`;
-    if(minHeight) {
+    if (minHeight) {
       el.style.minHeight = `${minHeight}px`;
     }
   }

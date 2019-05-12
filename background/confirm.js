@@ -27,33 +27,33 @@ async function loadData() {
 
   // as a pre-requisite, we should have access to groups here
   // if we don't, then something went horribly wrong
-  assignedGroup = groups.groups.find((g) => g.uuid === assignedGroupId);
-  if(!assignedGroup) {
+  assignedGroup = groups.groups.find(g => g.uuid === assignedGroupId);
+  if (!assignedGroup) {
     // wtf
     return;
   }
 
-  for(let el of document.querySelectorAll(".group-name")) {
+  for (let el of document.querySelectorAll(".group-name")) {
     el.textContent = assignedGroup.name;
   }
 
   // process the actual form
-  document.getElementById("redirect-form").addEventListener("submit", (e) => {
+  document.getElementById("redirect-form").addEventListener("submit", e => {
     e.preventDefault();
-    switch(e.explicitOriginalTarget.id) {
-    case "confirm":
-      confirm();
-      break;
-    case "deny":
-      deny();
-      break;
+    switch (e.explicitOriginalTarget.id) {
+      case "confirm":
+        confirm();
+        break;
+      case "deny":
+        deny();
+        break;
     }
   });
 }
 
 function confirm() {
   const neverAsk = document.getElementById("never-ask").checked;
-  if(neverAsk) {
+  if (neverAsk) {
     browser.runtime.sendMessage({
       method: "neverAsk",
       neverAsk: true,
@@ -61,15 +61,17 @@ function confirm() {
     });
   }
 
-  browser.runtime.sendMessage({
-    method: "redirectTab",
-    tabId: tabId,
-    windowId: windowId,
-    redirectUrl: redirectUrl,
-    originalUrl: originalUrl.href,
-    exempt: false,
-    groupId: search.get("groupId")
-  }).then((m) => console.log('done'), (e) => console.log(`error: ${e}`));
+  browser.runtime
+    .sendMessage({
+      method: "redirectTab",
+      tabId: tabId,
+      windowId: windowId,
+      redirectUrl: redirectUrl,
+      originalUrl: originalUrl.href,
+      exempt: false,
+      groupId: search.get("groupId")
+    })
+    .then(m => console.log("done"), e => console.log(`error: ${e}`));
 }
 
 function deny() {

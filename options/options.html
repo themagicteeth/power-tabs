@@ -1,116 +1,128 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="options.css" />
+  </head>
 
-<head>
-  <meta charset="utf-8">
-  <link rel="stylesheet" href="options.css" />
-</head>
-
-<body>
-  <h1>Settings</h1>
-  <form class="options">
-    <div class="settings-group">
-      <span class="label">Dark theme</span>
-      <input type="checkbox" id="darkTheme">
-    </div>
-    <div class="settings-group">
-      <span class="label">Reverse tab display</span>
-      <input type="checkbox" id="reverseTabDisplay">
-    </div>
-    <div class="settings-group">
-      <span class="label">Badge opens sidebar</span>
-      <input class="setting" type="checkbox" id="openSidebarOnClick">
-    </div>
-    <div class="settings-group">
-      <span class="label">Show active group in badge</span>
-      <input class="setting" type="checkbox" id="showActiveGroupBadge">
-    </div>
-    <div class="settings-group">
-      <div class="label">
-        Enable Quick Switcher
-        <div class="aside">
-          <p>When the badge is clicked, opens the Quick Switcher popup</p>
-        </div>
+  <body>
+    <h1>Settings</h1>
+    <form class="options">
+      <div class="settings-group">
+        <span class="label">Dark theme</span>
+        <input type="checkbox" id="darkTheme" />
       </div>
-      <input class="setting" type="checkbox" id="enablePopup">
-    </div>
-    <div class="settings-group">
-      <div class="label">
-        Hide tabs on group change
-        <div class="aside">
-          <p>This feature requires Firefox 59.0b3 or higher.</p>
-          <p>
-            You must also set
-            <br>extensions.webextensions.tabhide.enabled
-            <br>in about:config to true
-          </p>
-        </div>
+      <div class="settings-group">
+        <span class="label">Reverse tab display</span>
+        <input type="checkbox" id="reverseTabDisplay" />
       </div>
-      <input class="setting" type="checkbox" id="hideOnGroupChange">
-    </div>
-    <div class="settings-group">
-      <div class="label">
-        Discards tabs on group change
-        <div class="aside">
-          <p>
-            Discarding a tab is similar to closing a tab except the tab is still visible.
-            Useful for saving memory.
-          </p>
-          <p>Requires Firefox 58 or higher.</p>
-        </div>
+      <div class="settings-group">
+        <span class="label">Badge opens sidebar</span>
+        <input class="setting" type="checkbox" id="openSidebarOnClick" />
       </div>
-      <input class="setting" type="checkbox" id="discardOnGroupChange">
-    </div>
-    <div class="settings-group">
-      <div class="label">
-        Default group colors
-        <div class="aside">
-          <p>New groups are created with these colors</p>
-        </div>
+      <div class="settings-group">
+        <span class="label">Show active group in badge</span>
+        <input class="setting" type="checkbox" id="showActiveGroupBadge" />
       </div>
-      <input class="setting" type="color" id="defaultColour">
-      <input class="setting" type="color" id="defaultBgColour">
-    </div>
-  </form>
-  <div class="create-group-container">
-    <input class="control-button" type="button" value="Create Group" id="createGroup">
-  </div>
-  <div id="group-settings">
-  </div>
-  <script src="options.js"></script>
-
-  <template id="group-template">
-    <div class="group">
-      <div class="group-heading-container">
-        <h1 class="group-header" id="groupHeader"></h1>
-        <input class="control-button" type="button" value="Delete Group" id="deleteGroup">
-      </div>
-      <div class="options">
-        <div class="settings-group">
-          <span class="label">Name</span>
-          <input class="setting" id="groupName" type="text">
-        </div>
-        <div class="settings-group">
-          <span class="label">Foreground Color</span>
-          <input class="setting" id="groupColour" type="color">
-        </div>
-        <div class="settings-group">
-          <span class="label">Background Color</span>
-          <input class="setting" id="groupBgColour" type="color">
-        </div>
-        <div class="settings-group">
-          <div class="label">
-            Assigned Domains
-            <div class="aside">
-              You can delete assigned domains by selecting domains and pressing
-              Delete
-            </div>
+      <div class="settings-group">
+        <div class="label">
+          Enable Quick Switcher
+          <div class="aside">
+            <p>When the badge is clicked, opens the Quick Switcher popup</p>
           </div>
-          <select id="assignedDomains" class="assigned-domains setting" size=5 multiple></select>
+        </div>
+        <input class="setting" type="checkbox" id="enablePopup" />
+      </div>
+      <div class="settings-group">
+        <div class="label">
+          Hide tabs on group change
+          <div class="aside">
+            <p>This feature requires Firefox 59.0b3 or higher.</p>
+            <p>
+              You must also set
+              <br />extensions.webextensions.tabhide.enabled <br />in
+              about:config to true
+            </p>
+          </div>
+        </div>
+        <input class="setting" type="checkbox" id="hideOnGroupChange" />
+      </div>
+      <div class="settings-group">
+        <div class="label">
+          Discards tabs on group change
+          <div class="aside">
+            <p>
+              Discarding a tab is similar to closing a tab except the tab is
+              still visible. Useful for saving memory.
+            </p>
+            <p>Requires Firefox 58 or higher.</p>
+          </div>
+        </div>
+        <input class="setting" type="checkbox" id="discardOnGroupChange" />
+      </div>
+      <div class="settings-group">
+        <div class="label">
+          Default group colors
+          <div class="aside">
+            <p>New groups are created with these colors</p>
+          </div>
+        </div>
+        <input class="setting" type="color" id="defaultColour" />
+        <input class="setting" type="color" id="defaultBgColour" />
+      </div>
+    </form>
+    <div class="create-group-container">
+      <input
+        class="control-button"
+        type="button"
+        value="Create Group"
+        id="createGroup"
+      />
+    </div>
+    <div id="group-settings"></div>
+    <script src="options.js"></script>
+
+    <template id="group-template">
+      <div class="group">
+        <div class="group-heading-container">
+          <h1 class="group-header" id="groupHeader"></h1>
+          <input
+            class="control-button"
+            type="button"
+            value="Delete Group"
+            id="deleteGroup"
+          />
+        </div>
+        <div class="options">
+          <div class="settings-group">
+            <span class="label">Name</span>
+            <input class="setting" id="groupName" type="text" />
+          </div>
+          <div class="settings-group">
+            <span class="label">Foreground Color</span>
+            <input class="setting" id="groupColour" type="color" />
+          </div>
+          <div class="settings-group">
+            <span class="label">Background Color</span>
+            <input class="setting" id="groupBgColour" type="color" />
+          </div>
+          <div class="settings-group">
+            <div class="label">
+              Assigned Domains
+              <div class="aside">
+                You can delete assigned domains by selecting domains and
+                pressing Delete
+              </div>
+            </div>
+            <select
+              id="assignedDomains"
+              class="assigned-domains setting"
+              size="5"
+              multiple
+            ></select>
+          </div>
         </div>
       </div>
-    </div>
-  </template>
-</body>
-
+    </template>
+  </body>
 </html>

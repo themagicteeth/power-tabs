@@ -27,7 +27,7 @@ p {
   box-sizing: border-box;
   margin-bottom: 8px;
   padding-bottom: 4px;
-  border-bottom: 1px solid #D7D7DB;
+  border-bottom: 1px solid #d7d7db;
 }
 
 .settings-group:last-child {
@@ -73,7 +73,7 @@ input.invalid {
   -moz-appearance: none;
   background-color: #f9f9fa;
   min-height: 30px;
-  border:  1px solid #d7d7db;
+  border: 1px solid #d7d7db;
   border-radius: 2px;
   margin: 4px 8px;
   font-size: 1em;

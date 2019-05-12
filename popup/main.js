@@ -9,15 +9,15 @@ var _windowId = null;
 var cancelSearch = document.getElementById("cancel-search-icon");
 var groupContainer = document.getElementById("group-container");
 var NEW_TAB_PAGES = new Set([
-    "about:startpage",
-    "about:newtab",
-    "about:home",
-    "about:blank"
+  "about:startpage",
+  "about:newtab",
+  "about:home",
+  "about:blank"
 ]);
 
 // workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1324255
 function stealFocus(e) {
-  if(e.target === document) {
+  if (e.target === document) {
     searchBar.focus();
   }
   document.removeEventListener("focus", stealFocus);
@@ -30,7 +30,7 @@ function createIcon(favIconUrl) {
   let icon = document.createElement("div");
   icon.className = "tab-icon";
   let iconURL = favIconUrl || "/icons/favicon.svg";
-  if(iconURL.indexOf("chrome://") === 0) {
+  if (iconURL.indexOf("chrome://") === 0) {
     iconURL = "/icons/favicon.svg";
   }
 
@@ -64,7 +64,9 @@ class Tab {
     groupBadge.style.color = parent.colour;
     groupBadge.style.backgroundColor = parent.background;
 
-    let icon = createIcon(data.hasOwnProperty('favIconUrl') ? data.favIconUrl : null);
+    let icon = createIcon(
+      data.hasOwnProperty("favIconUrl") ? data.favIconUrl : null
+    );
     let name = document.createElement("div");
     name.classList.add("tab-name");
     name.classList.add("truncate-text");
@@ -75,7 +77,7 @@ class Tab {
     tab.appendChild(name);
     tab.appendChild(groupBadge);
 
-    tab.addEventListener("click", (e) => {
+    tab.addEventListener("click", e => {
       e.preventDefault();
       this.setActive();
       e.stopPropagation();
@@ -87,37 +89,41 @@ class Tab {
   }
 
   hide() {
-    if(!this.hidden) {
+    if (!this.hidden) {
       this.hidden = true;
       this.group.view.parentNode.removeChild(this.view);
     }
   }
 
   show() {
-    if(this.hidden) {
+    if (this.hidden) {
       this.hidden = false;
       this.group.view.parentNode.appendChild(this.view);
     }
   }
 
   setActive() {
-    browser.runtime.sendMessage({
-      method: "forceGroupChange",
-      groupId: this.group.uuid,
-      tabId: this.id,
-      windowId: _windowId
-    }).then((after) => {
-      currentTab = after;
-      currentGroup = this.group;
-      updateTabDisplay();
-    });
+    browser.runtime
+      .sendMessage({
+        method: "forceGroupChange",
+        groupId: this.group.uuid,
+        tabId: this.id,
+        windowId: _windowId
+      })
+      .then(after => {
+        currentTab = after;
+        currentGroup = this.group;
+        updateTabDisplay();
+      });
   }
 
   matches(substr) {
     let regex = new RegExp(escapeRegex(substr), "i");
-    return this.data.title.search(regex) !== -1 || this.data.url.search(regex) !== -1;
+    return (
+      this.data.title.search(regex) !== -1 || this.data.url.search(regex) !== -1
+    );
   }
-};
+}
 
 class Group {
   constructor(data) {
@@ -125,8 +131,8 @@ class Group {
     this.name = data.name;
     this.open = data.open;
     this.active = data.active;
-    this.colour = data.colour || '#000000';
-    this.background = data.background || '#ededf0';
+    this.colour = data.colour || "#000000";
+    this.background = data.background || "#ededf0";
     this.tabs = [];
   }
 
@@ -146,22 +152,24 @@ class Group {
   }
 
   getLatestTab() {
-    if(this.tabs.length === 0) {
+    if (this.tabs.length === 0) {
       return null;
     }
 
-    if(this.tabs.length === 1) {
+    if (this.tabs.length === 1) {
       return this.tabs[0];
     }
 
     let index = this.tabs.reduce((maxIndex, element, index, arr) => {
-      return element.lastAccessed > arr[maxIndex].lastAccessed ? index : maxIndex
+      return element.lastAccessed > arr[maxIndex].lastAccessed
+        ? index
+        : maxIndex;
     }, 0);
     return this.tabs[index];
   }
 
   getFirstVisibleTab() {
-    let foundIndex = this.tabs.findIndex((t) => !t.hidden);
+    let foundIndex = this.tabs.findIndex(t => !t.hidden);
     return foundIndex === -1 ? null : this.tabs[foundIndex];
   }
 
@@ -174,10 +182,9 @@ class Group {
   }
 
   setTabCount(c) {
-    if(c == 1) {
+    if (c == 1) {
       this._tabCount.textContent = "1 Tab";
-    }
-    else {
+    } else {
       this._tabCount.textContent = `${c} Tabs`;
     }
   }
@@ -207,23 +214,24 @@ class Group {
     this.view.appendChild(groupName);
     this.view.appendChild(this._tabView);
 
-    this.view.addEventListener("click", (e) => {
+    this.view.addEventListener("click", e => {
       let tab = this.getLatestTab();
-      if(tab) {
+      if (tab) {
         tab.setActive();
-      }
-      else {
-        browser.runtime.sendMessage({
-          method: "createTab",
-          windowId: _windowId,
-          groupId: this.uuid
-        }).then((response) => {
-          this.addTab(response);
-          this.setTabCount(this.tabs.length);
-          currentTab = response;
-          currentGroup = this;
-          updateTabDisplay();
-        });
+      } else {
+        browser.runtime
+          .sendMessage({
+            method: "createTab",
+            windowId: _windowId,
+            groupId: this.uuid
+          })
+          .then(response => {
+            this.addTab(response);
+            this.setTabCount(this.tabs.length);
+            currentTab = response;
+            currentGroup = this;
+            updateTabDisplay();
+          });
       }
     });
 
@@ -231,11 +239,14 @@ class Group {
     //   this._tabView.appendChild(tab.view);
     // }
   }
-};
+}
 
 async function switchToLastActiveTab() {
-  let tabs = await browser.tabs.query({windowId: browser.windows.WINDOW_ID_CURRENT, active: false});
-  if(tabs.length > 0) {
+  let tabs = await browser.tabs.query({
+    windowId: browser.windows.WINDOW_ID_CURRENT,
+    active: false
+  });
+  if (tabs.length > 0) {
     tabs.sort((a, b) => a.lastAccessed - b.lastAccessed);
     let tabId = tabs[tabs.length - 1].id;
     await browser.runtime.sendMessage({
@@ -256,8 +267,8 @@ searchBar.addEventListener("blur", () => {
   searchBar.parentNode.style.border = "";
 });
 
-searchBar.addEventListener("keyup", (e) => {
-  if(searchBar.value !== _lastSearch) {
+searchBar.addEventListener("keyup", e => {
+  if (searchBar.value !== _lastSearch) {
     swapSelectedWith(searchBar);
   }
 
@@ -265,64 +276,67 @@ searchBar.addEventListener("keyup", (e) => {
   cancelSearch.classList.toggle("hidden", searchBar.value.length == 0);
 
   let groups = Array.from(cache.values());
-  _allTabs.forEach((t) => t.hide());
-  groups.forEach((g) => g.show());
+  _allTabs.forEach(t => t.hide());
+  groups.forEach(g => g.show());
 
-  if(searchBar.value.length !== 0) {
-    groups.forEach((g) => g.hide());
+  if (searchBar.value.length !== 0) {
+    groups.forEach(g => g.hide());
     let filtered = fuzzyMatchTabObjects(searchBar.value, _allTabs);
     filtered.forEach(t => t.show());
   }
 
-  if(e.key === "Enter") {
+  if (e.key === "Enter") {
     // get the first tab result if we have a filter in place
     let activeTab = document.querySelector(".tab");
 
-    if(activeTab !== null) {
+    if (activeTab !== null) {
       activeTab.click();
       window.close();
     }
 
     // if we haven't found a result then we should default to
     // the last accessed tab outside of our current one
-    if(searchBar.value.length === 0) {
+    if (searchBar.value.length === 0) {
       switchToLastActiveTab();
     }
   }
 });
 
-cancelSearch.addEventListener("click", (e) => {
+cancelSearch.addEventListener("click", e => {
   searchBar.value = "";
-  for(let g of cache.values()) {
+  for (let g of cache.values()) {
     g.show();
-    g.tabs.forEach((t) => t.hide());
+    g.tabs.forEach(t => t.hide());
   }
 });
 
 async function prepare() {
- let storage = await browser.storage.local.get("groups");
- if(!storage.hasOwnProperty("groups")) {
-  // peculiar
-  return;
- }
+  let storage = await browser.storage.local.get("groups");
+  if (!storage.hasOwnProperty("groups")) {
+    // peculiar
+    return;
+  }
 
- let isDarkTheme = await browser.storage.local.get("darkTheme");
- isDarkTheme = isDarkTheme.hasOwnProperty("darkTheme") && isDarkTheme.darkTheme;
- document.body.classList.add(isDarkTheme ? "dark-theme" : "light-theme");
+  let isDarkTheme = await browser.storage.local.get("darkTheme");
+  isDarkTheme =
+    isDarkTheme.hasOwnProperty("darkTheme") && isDarkTheme.darkTheme;
+  document.body.classList.add(isDarkTheme ? "dark-theme" : "light-theme");
 
- for(let group of storage.groups) {
-  let g = new Group(group);
-  cache.set(g.uuid, g);
- }
+  for (let group of storage.groups) {
+    let g = new Group(group);
+    cache.set(g.uuid, g);
+  }
 
-  let tabs = await browser.tabs.query({windowId: browser.windows.WINDOW_ID_CURRENT});
-  for(let tab of tabs) {
+  let tabs = await browser.tabs.query({
+    windowId: browser.windows.WINDOW_ID_CURRENT
+  });
+  for (let tab of tabs) {
     let groupId = await browser.sessions.getTabValue(tab.id, "group-id");
     let group = cache.get(groupId);
-    if(group) {
+    if (group) {
       group.addTab(tab);
     }
-    if(tab.active) {
+    if (tab.active) {
       currentTab = tab;
       currentGroup = group;
     }
@@ -335,19 +349,23 @@ async function prepare() {
 
 var checkbox = document.getElementById("always-open");
 
-checkbox.addEventListener("click", (e) => {
+checkbox.addEventListener("click", e => {
   setDomainAssignment(checkbox.checked);
 });
 
-document.getElementById("new-group-button").addEventListener("click", async (e) => {
-  browser.runtime.sendMessage({
-    method: "createGroup",
-    windowId: _windowId
-  }).then((groupInfo) => {
-    cache.set(groupInfo.uuid, new Group(groupInfo));
-    updateGroupDisplay();
-  })
-});
+document
+  .getElementById("new-group-button")
+  .addEventListener("click", async e => {
+    browser.runtime
+      .sendMessage({
+        method: "createGroup",
+        windowId: _windowId
+      })
+      .then(groupInfo => {
+        cache.set(groupInfo.uuid, new Group(groupInfo));
+        updateGroupDisplay();
+      });
+  });
 
 document.getElementById("settings-button").addEventListener("click", () => {
   browser.runtime.openOptionsPage();
@@ -355,7 +373,7 @@ document.getElementById("settings-button").addEventListener("click", () => {
 
 async function updateTabDisplay() {
   let tabInfo = document.getElementById("tab-info");
-  while(tabInfo.lastChild) {
+  while (tabInfo.lastChild) {
     tabInfo.removeChild(tabInfo.lastChild);
   }
   checkbox.checked = false;
@@ -368,7 +386,9 @@ async function updateTabDisplay() {
   name.classList.add("tab-title");
   name.classList.add("truncate-text");
 
-  let icon = createIcon(currentTab.hasOwnProperty('favIconUrl') ? currentTab.favIconUrl : null);
+  let icon = createIcon(
+    currentTab.hasOwnProperty("favIconUrl") ? currentTab.favIconUrl : null
+  );
 
   tabInfo.appendChild(icon);
   tabInfo.appendChild(name);
@@ -379,16 +399,15 @@ async function updateTabDisplay() {
   // with the tab and then look up that group ID in our localStorage
   let groupNameLabel = document.getElementById("group-name");
   let domainName = new URL(currentTab.url).hostname;
-  if(!domainName || NEW_TAB_PAGES.has(currentTab.url)) {
+  if (!domainName || NEW_TAB_PAGES.has(currentTab.url)) {
     label.textContent = "Cannot assign to this page.";
     groupNameLabel.textContent = currentGroup.name;
     return;
   }
 
-
   let key = `page:${domainName}`;
   let assignedToGroup = await browser.storage.local.get(key);
-  if(assignedToGroup.hasOwnProperty(key)) {
+  if (assignedToGroup.hasOwnProperty(key)) {
     checkbox.checked = assignedToGroup[key].group === currentGroup.uuid;
   }
 
@@ -400,11 +419,11 @@ async function updateTabDisplay() {
 }
 
 function updateGroupDisplay() {
-  while(groupContainer.lastChild) {
+  while (groupContainer.lastChild) {
     groupContainer.removeChild(groupContainer.lastChild);
   }
 
-  for(let group of cache.values()) {
+  for (let group of cache.values()) {
     group.buildView();
     groupContainer.appendChild(group.view);
   }
@@ -415,19 +434,20 @@ async function setDomainAssignment(add) {
   let key = `page:${domainName}`;
   let previous = await browser.storage.local.get(key);
 
-  if(add) {
-    if(previous.hasOwnProperty(key)) {
+  if (add) {
+    if (previous.hasOwnProperty(key)) {
       // already existed prior so just overwrite the value
       previous[key].group = currentGroup.uuid;
-    }
-    else {
+    } else {
       previous[key] = { group: currentGroup.uuid };
     }
     await browser.storage.local.set(previous);
-  }
-  else {
+  } else {
     // only actually delete the key if it existed and it was set to this group
-    if(previous.hasOwnProperty(key) && previous[key].group === currentGroup.uuid) {
+    if (
+      previous.hasOwnProperty(key) &&
+      previous[key].group === currentGroup.uuid
+    ) {
       await browser.storage.local.remove(key);
     }
   }
@@ -437,13 +457,12 @@ prepare();
 
 function swapSelectedWith(node) {
   // remove the hover colour from the active group
-  if(_selectedElement.hasAttribute("data-group-id")) {
+  if (_selectedElement.hasAttribute("data-group-id")) {
     let group = cache.get(_selectedElement.getAttribute("data-group-id"));
   }
 
-
   // add the hover colour to the new active group (if applicable)
-  if(node.hasAttribute("data-group-id")) {
+  if (node.hasAttribute("data-group-id")) {
     let group = cache.get(node.getAttribute("data-group-id"));
   }
 
@@ -453,12 +472,12 @@ function swapSelectedWith(node) {
 }
 
 // allow group and tab browsing with arrow keys and enter
-document.addEventListener("keydown", (e) => {
-   if(e.key !== "ArrowUp" && e.key !== "ArrowDown" && e.key !== "Enter") {
+document.addEventListener("keydown", e => {
+  if (e.key !== "ArrowUp" && e.key !== "ArrowDown" && e.key !== "Enter") {
     return;
   }
 
-  if(e.key == "Enter" && _selectedElement !== searchBar) {
+  if (e.key == "Enter" && _selectedElement !== searchBar) {
     // simulate a click and propagate to the proper onclick handler
     _selectedElement.click();
     swapSelectedWith(searchBar);
@@ -466,21 +485,23 @@ document.addEventListener("keydown", (e) => {
   }
 
   let up = e.key == "ArrowUp";
-  if(e.target.hasAttribute("data-selectable")){
+  if (e.target.hasAttribute("data-selectable")) {
     e.preventDefault();
-    let elements = [...document.querySelectorAll("[data-selectable]:not(.hidden)")];
+    let elements = [
+      ...document.querySelectorAll("[data-selectable]:not(.hidden)")
+    ];
     let index = elements.indexOf(_selectedElement);
     let newElement = elements[index + (up ? -1 : +1)];
-    if(newElement !== undefined) {
+    if (newElement !== undefined) {
       swapSelectedWith(newElement);
       let rect = newElement.getBoundingClientRect();
-      if(rect.top < 0 || rect.top > window.innerHeight) {
+      if (rect.top < 0 || rect.top > window.innerHeight) {
         window.scrollTo(0, rect.top + document.body.scrollTop);
       }
     }
   }
 });
 
-document.addEventListener("click", (e) => {
+document.addEventListener("click", e => {
   swapSelectedWith(searchBar);
 });
