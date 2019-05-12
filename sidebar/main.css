@@ -1,42 +1,42 @@
-/*
-  Use the Photon Design Guidelines when possible
-  See: http://design.firefox.com/photon/
-*/
+@import url("../lib/photon.css");
 
 .light-theme {
   --body-background: #ffffff;
-  --text-color: #0c0c0d;
+  --text-color: var(--grey-90);
 
   /* search box colours */
   --search-border-normal: rgba(12, 12, 13, 0.3);
-  --search-border-hover: #0a84ff;
-  --search-border-focus: #0a84ff;
-  --search-background: #ffffff;
+  --search-border-hover: var(--grey-40);
+  --search-border-focus: var(--grey-40);
+  --search-background: var(--white-100);
   --search-placeholder: rgba(12, 12, 13, 0.7);
   --search-text: #0c0c0d;
 
-  --hover-tab-border: rgb(69, 161, 255);
+  --hover-tab-border: var(--grey-30);
 
   --group-background: #ededf0;
   --group-hover-background: #d7d7db;
   --group-border: #b1b1b3;
 
-  --selected-tab-background: rgb(69, 161, 255, 0.4);
-  --selected-tab-border: rgb(69, 161, 255);
+  --selected-tab-background: var(--grey-30);
+  --selected-tab-border: var(--grey-30);
 
-  --active-tab-background: rgb(229, 229, 229);
-  --active-tab-border: rgb(217, 217, 217);
+  --active-tab-background: var(--grey-30);
+  --active-tab-border: var(--grey-30);
 
   --ghost-button-hover: rgba(12, 12, 13, 0.1);
 
   --drop-target: rgb(51, 153, 255);
 
-  --context-menu-background: #ffffff;
+  --context-menu-background: var(--white-100);
   --context-menu-hover: rgb(240, 240, 240);
-  --context-menu-border: rgba(12, 12, 13, 0.2);
+  --context-menu-border: var(--grey-30);
   --context-menu-shadow: rgb(12, 12, 13, 0.1);
   --context-menu-separator: rgb(222, 222, 222);
   --context-menu-text: #0c0c0d;
+  --border-radius: 4px;
+  --tab-border-color: var(--grey-30);
+  --tab-background-hover: var(--grey-20);
 }
 
 .dark-theme {
@@ -63,7 +63,7 @@
   --active-tab-background: #474749;
   --active-tab-border: #262627;
 
-  --ghost-button-hover: #5b5b5d;
+  --ghost-button-hover: hsla(0, 0%, 0%, 0.16);
 
   --drop-target: rgb(51, 153, 255);
 
@@ -95,9 +95,10 @@ body {
   background-color: var(--search-background);
   color: var(--search-text);
   border: 1px solid var(--search-border-normal);
+  border-radius: var(--border-radius);
   width: 90%;
   margin: 0 2px;
-  height: 24px;
+  height: 33px;
   padding: 4px;
 }
 
@@ -153,11 +154,14 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  width: 100%;
+  /* border-radius: var(--border-radius); */
+  /* width: 98%; */
   padding-left: 12px;
   padding-right: 4px;
-  margin: 1px 0px;
-  height: 22px;
+  /* margin: 2px auto; */
+  height: 33px;
+  /* border-top: solid 1px var(--tab-border-color); */
+  border-bottom: solid 1px var(--tab-border-color);
 }
 
 .tab-icon {
@@ -176,17 +180,14 @@ body {
 }
 
 .tab-entry:hover {
-  box-shadow: inset 0 0 0 1px var(--hover-tab-border) !important;
+  background-color: var(--tab-background-hover);
 }
 
+:not(.selected-tab).active-tab ,
 .selected-tab {
   background-color: var(--selected-tab-background);
-  box-shadow: inset 0 0 0 1px var(--selected-tab-border);
-}
-
-:not(.selected-tab).active-tab {
-  background-color: var(--active-tab-background);
-  box-shadow: inset 0 0 0 1px var(--active-tab-border);
+  /* border-top: solid 1px var(--tab-border-color); */
+  /* border-bottom: solid 1px var(--tab-border-color); */
 }
 
 .loading {
@@ -270,23 +271,45 @@ body {
 }
 
 .tab-group {
-  padding-bottom: 5px;
-}
-
-.tab-group-list {
-  padding-top: 5px;
-  display: flex;
-  flex-direction: column;
+  width: 95%;
+  margin: 5px auto;
 }
 
 .tab-group-container {
-  margin: 0px 4px;
   display: flex;
   align-items: center;
   padding-left: 5px;
+  height: 33px;
   background-color: var(--group-background);
-  border: 1px solid var(--group-border);
+  border-radius: var(--border-radius);
 }
+
+.tab-group[open=""] {
+  width: 98%;
+  box-shadow: 0 0 32px 0 rgba(12,12,13,.1),0 2px 16px 0 rgba(12,12,13,.05);
+}
+
+.tab-group[open=""] > .tab-group-container,
+.tab-group-list {
+  border-left: 1px solid var(--group-border);
+  border-right: 1px solid var(--group-border);
+}
+
+.tab-group[open=""] > .tab-group-container {
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.tab-group-list {
+  display: flex;
+  flex-direction: column;
+  border-bottom-right-radius: 4px;
+  border-bottom-left-radius: 4px;
+  border-bottom: 1px solid var(--group-border); 
+}
+
 
 .tab-group-container:hover {
   background-color: var(--group-hover-background);
@@ -294,7 +317,6 @@ body {
 
 .tab-group-name {
   flex: 20 0;
-  height: 24px;
   font-size: 15px;
   margin-left: 4px;
 }
@@ -367,6 +389,8 @@ body {
   display: flex;
   justify-content: space-around;
   padding: 6px;
+  margin-left:10px;
+  margin-right:10px;
 }
 
 .control-button {
@@ -425,8 +449,6 @@ body {
 }
 
 .context-menu-item {
-  /* flex: 1 0; */
-  /* max-height: 24px; */
   vertical-align: center;
   padding: 4px 8px;
 }
