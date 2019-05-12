@@ -328,8 +328,8 @@ async function createGroup(windowId, sendResponse = null) {
   let newGroup = {
     name: "untitled",
     uuid: uuid4(),
-    open: true,
-    active: true,
+    open: false,
+    active: false,
     colour: _defaultColour,
     background: _defaultBgColour
   };
@@ -593,8 +593,8 @@ async function actualFreshInstall() {
     name: "untitled",
     colour: _defaultColour,
     background: _defaultBgColour,
-    active: true,
-    open: true
+    active: false,
+    open: false
   };
 
   let tabs = await browser.tabs.query({});
