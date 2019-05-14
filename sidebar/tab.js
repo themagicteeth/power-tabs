@@ -124,44 +124,57 @@ class TabEntry {
   }
 
   getContextMenuItems(groupList) {
-    let items = [];
+    const seperator = { name: "separator" }
 
-    items.push({
-      name: "Reload Tab",
-      onClick: e => this.reload()
-    });
+    return [
+      this._contextMenuReload(),
+      this._contextMenuMute(),
+      seperator,
+      this._contextMenuPin(),
+      this._contextMenuDuplicate(),
+      this._contextMenuNewWindow(groupList),
+      seperator,
+      this._contextMenuCloseAbove(),
+      this._contextMenuCloseBelow(),
+      this._contextMenuCloseOther(),
+      seperator,
+      this._contextMenuUndoClose(),
+      this._contextMenuDiscard(),
+      this._contextMenuClose()
+    ]
+  }
 
-    if (this.muted) {
-      items.push({
-        name: "Unmute Tab",
-        onClick: e => this.unmute()
-      });
-    } else {
-      items.push({
-        name: "Mute Tab",
-        onClick: e => this.mute()
-      });
-    }
+  _contextMenuClose () {
+    return {
+      name: "Close Tab",
+      onClick: e => this.close()
+    };
+  }
 
-    items.push({ name: "separator" });
-    if (this.pinned) {
-      items.push({
-        name: "Unpin Tab",
-        onClick: e => this.unpin()
-      });
-    } else {
-      items.push({
-        name: "Pin Tab",
-        onClick: e => this.pin()
-      });
-    }
+  _contextMenuDiscard () {
+    return {
+      name: "Discard Tab",
+      onClick: () => browser.tabs.discard(this.id),
+      isEnabled: () => !this.active && browser.tabs.hasOwnProperty("discard")
+    };
+  }
 
-    items.push({
-      name: "Duplicate Tab",
-      onClick: e => this.duplicate()
-    });
+  _contextMenuUndoClose () {
+    return {
+      name: "Undo Close Tab",
+      onClick: async e => {
+        let last = await browser.sessions.getRecentlyClosed({ maxResults: 1 });
+        if (last.length === 0) {
+          return;
+        }
+        let obj = last[0].tab || last[0].window;
+        await browser.sessions.restore(obj.sessionId);
+      }
+    };
+  }
 
-    items.push({
+  _contextMenuNewWindow (groupList) {
+    return {
       name: "Move To",
       items: [
         {
@@ -181,53 +194,73 @@ class TabEntry {
           };
         })
       )
-    });
+    };
+  }
+  
+  _contextMenuReload () {
+    return {
+      name: "Reload Tab",
+      onClick: e => this.reload()
+    };
+  }
 
-    items.push({ name: "separator" });
-
-    items.push({
-      name: "Close Tabs Above",
-      isEnabled: () => this.tabIndex > 0,
-      onClick: e => this.group.closeAbove(this.tabIndex)
-    });
-
-    items.push({
-      name: "Close Tabs Below",
-      isEnabled: () => this.tabIndex !== this.group.tabs.length - 1,
-      onClick: e => this.group.closeBelow(this.tabIndex)
-    });
-
-    items.push({
+  _contextMenuCloseOther () {
+    return {
       name: "Close Other Tabs",
       isEnabled: () => this.group.tabs.length >= 2,
       onClick: e => this.group.closeExcept(this.tabIndex)
-    });
+    };
+  }
 
-    items.push({ name: "separator" });
-    items.push({
-      name: "Undo Close Tab",
-      onClick: async e => {
-        let last = await browser.sessions.getRecentlyClosed({ maxResults: 1 });
-        if (last.length === 0) {
-          return;
-        }
-        let obj = last[0].tab || last[0].window;
-        await browser.sessions.restore(obj.sessionId);
-      }
-    });
+  _contextMenuCloseBelow () {
+    return {
+      name: "Close Tabs Below",
+      isEnabled: () => this.tabIndex !== this.group.tabs.length - 1,
+      onClick: e => this.group.closeBelow(this.tabIndex)
+    };
+  }
 
-    items.push({
-      name: "Discard Tab",
-      onClick: () => browser.tabs.discard(this.id),
-      isEnabled: () => !this.active && browser.tabs.hasOwnProperty("discard")
-    });
+  _contextMenuCloseAbove () {
+    return {
+      name: "Close Tabs Above",
+      isEnabled: () => this.tabIndex > 0,
+      onClick: e => this.group.closeAbove(this.tabIndex)
+    };
+  }
 
-    items.push({
-      name: "Close Tab",
-      onClick: e => this.close()
-    });
+  _contextMenuDuplicate () {
+    return {
+      name: "Duplicate Tab",
+      onClick: e => this.duplicate()
+    };
+  }
 
-    return items;
+  _contextMenuPin () {
+    if (this.pinned) {
+      return {
+        name: "Unpin Tab",
+        onClick: e => this.unpin()
+      };
+    } else {
+      return {
+        name: "Pin Tab",
+        onClick: e => this.pin()
+      };
+    }
+  }
+
+  _contextMenuMute () {
+    if (this.muted) {
+      return {
+        name: "Unmute Tab",
+        onClick: e => this.unmute()
+      };
+    } else {
+      return {
+        name: "Mute Tab",
+        onClick: e => this.mute()
+      };
+    }
   }
 
   /* these functions are for the context menu */
